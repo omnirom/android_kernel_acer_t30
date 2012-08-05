@@ -185,8 +185,6 @@ struct tps80031_pupd_init_data {
 };
 
 struct tps80031_platform_data {
-	int num_subdevs;
-	struct tps80031_subdev_info *subdevs;
 	int gpio_base;
 	int irq_base;
 	struct tps80031_32kclock_plat_data *clk32k_pdata;
