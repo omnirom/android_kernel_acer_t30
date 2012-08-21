@@ -263,21 +263,19 @@ void tegra_latency_allowance_update_tick_length(unsigned int new_ns_per_tick)
 	int la;
 	unsigned long reg_read;
 	unsigned long reg_write;
-	unsigned long scale_factor = 0;
+	unsigned long scale_factor = new_ns_per_tick / ns_per_tick;
 
-	if (new_ns_per_tick != 30) {
-		ns_per_tick = new_ns_per_tick;
-		scale_factor = new_ns_per_tick / 30;
-
+	if (scale_factor > 1) {
 		spin_lock(&safety_lock);
-		for (i = 0; i < ARRAY_SIZE(la_info) - 1; i++) {
-			reg_read = readl(la_info[i].reg_addr);
-			la = ((reg_read & la_info[i].mask) >> la_info[i].shift)
-				/ scale_factor;
+		ns_per_tick = new_ns_per_tick;
+		for (i = 0; i < ARRAY_SIZE(la_info_array) - 1; i++) {
+			reg_read = readl(la_info_array[i].reg_addr);
+			la = ((reg_read & la_info_array[i].mask) >>
+				la_info_array[i].shift) / scale_factor;
 
-			reg_write = (reg_read & ~la_info[i].mask) |
-					(la << la_info[i].shift);
-			writel(reg_write, la_info[i].reg_addr);
+			reg_write = (reg_read & ~la_info_array[i].mask) |
+					(la << la_info_array[i].shift);
+			writel(reg_write, la_info_array[i].reg_addr);
 			scaling_info[i].la_set = la;
 		}
 		spin_unlock(&safety_lock);
