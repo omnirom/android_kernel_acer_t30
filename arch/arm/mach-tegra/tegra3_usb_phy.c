@@ -84,7 +84,6 @@
 #define   USB_USBMODE_DEVICE		(2 << 0)
 
 #define USB_SUSP_CTRL		0x400
-#define   USB_WAKE_ON_RESUME_EN	(1 << 2)
 #define   USB_WAKE_ON_CNNT_EN_DEV	(1 << 3)
 #define   USB_WAKE_ON_DISCON_EN_DEV (1 << 4)
 #define   USB_SUSP_CLR			(1 << 5)
@@ -468,7 +467,7 @@
 #define DBG(stuff...)	do {} while (0)
 #endif
 
-#if 1
+#if 0
 #define PHY_DBG(stuff...)	pr_info("tegra3_usb_phy: " stuff)
 #else
 #define PHY_DBG(stuff...)	do {} while (0)
@@ -1261,15 +1260,26 @@ static int utmi_phy_irq(struct tegra_usb_phy *phy)
 			val &= ~USB_PHY_CLK_VALID_INT_ENB |
 					USB_PHY_CLK_VALID_INT_STS;
 			writel(val , (base + USB_SUSP_CTRL));
-			pr_info("%s: usb device plugged-in\n", __func__);
-			val = readl(base + USB_USBSTS);
-			if (!(val  & USB_USBSTS_PCI)) {
-				irq_status = IRQ_NONE;
-				goto exit;
+
+			/* In case of remote wakeup PHY clock will not up
+			   immediately, so should not access any controller
+			   register but normal plug-in/plug-out should be
+			   executed */
+			if (!remote_wakeup) {
+				val = readl(base + USB_USBSTS);
+				if (!(val  & USB_USBSTS_PCI)) {
+					irq_status = IRQ_NONE;
+					goto exit;
+				}
+
+				val = readl(base + USB_PORTSC);
+				if (val & USB_PORTSC_CCS)
+					val &= ~USB_PORTSC_WKCN;
+				else
+					val &= ~USB_PORTSC_WKDS;
+				val &= ~USB_PORTSC_RWC_BITS;
+				writel(val , (base + USB_PORTSC));
 			}
-			val = readl(base + USB_PORTSC);
-			val &= ~(USB_PORTSC_WKCN | USB_PORTSC_RWC_BITS);
-			writel(val , (base + USB_PORTSC));
 		} else if (!phy->phy_clk_on) {
 			if (remote_wakeup)
 				irq_status = IRQ_HANDLED;
@@ -1491,11 +1501,12 @@ static int utmi_phy_power_off(struct tegra_usb_phy *phy)
 			enable_hotplug = (val & USB_ID_STATUS) ? false : true;
 		}
 		if (enable_hotplug) {
+			/* Enable wakeup event of device plug-in/plug-out */
 			val = readl(base + USB_PORTSC);
-			val &= ~(USB_PORTSC_WKOC | USB_PORTSC_WKDS | USB_PORTSC_WKCN);
-			if(check_connect_status(phy)){
-				val |= (USB_PORTSC_WKOC | USB_PORTSC_WKDS);
-			}
+			if (val & USB_PORTSC_CCS)
+				val |= USB_PORTSC_WKDS;
+			else
+				val |= USB_PORTSC_WKCN;
 			writel(val, base + USB_PORTSC);
 
 			val = readl(base + USB_SUSP_CTRL);
@@ -1509,10 +1520,6 @@ static int utmi_phy_power_off(struct tegra_usb_phy *phy)
 #endif
 			writel(val, base + USB_SUSP_CTRL);
 		} else {
-			val = readl(base + USB_PORTSC);
-			val &= ~(USB_PORTSC_WKOC | USB_PORTSC_WKDS | USB_PORTSC_WKCN);
-			writel(val, base + USB_PORTSC);
-
 			/* Disable PHY clock valid interrupts while going into suspend*/
 			val = readl(base + USB_SUSP_CTRL);
 			val &= ~USB_PHY_CLK_VALID_INT_ENB;
@@ -1520,10 +1527,7 @@ static int utmi_phy_power_off(struct tegra_usb_phy *phy)
 		}
 	}
 
-	val = readl(base + USB_SUSP_CTRL);
-	val |= USB_WAKE_ON_RESUME_EN;
-	writel(val, base + USB_SUSP_CTRL);
-
+	/* Disable PHY clock */
 	val = readl(base + HOSTPC1_DEVLC);
 	val |= HOSTPC1_DEVLC_PHCD;
 	writel(val, base + HOSTPC1_DEVLC);
@@ -1712,7 +1716,9 @@ static void utmi_phy_restore_end(struct tegra_usb_phy *phy)
 			val = readl(base + USB_PORTSC);
 			udelay(1);
 			if (wait_time_us == 0) {
-				PHY_DBG("%s PMC REMOTE WAKEUP FPR timeout val = 0x%x instance = %d\n", __func__, (int)val, phy->inst);
+				PHY_DBG("%s PMC REMOTE WAKEUP FPR timeout"
+					"val = 0x%lx instance = %d\n",
+					__func__, val, phy->inst);
 				utmip_phy_disable_pmc_bus_ctrl(phy);
 				utmi_phy_post_resume(phy);
 				return;
@@ -3054,18 +3060,4 @@ int tegra3_usb_phy_init_ops(struct tegra_usb_phy *phy)
 	/* usb_phy_power_down_pmc(); */
 
 	return 0;
-}
-
-bool check_connect_status(struct tegra_usb_phy *phy)
-{
-	unsigned long val;
-	void __iomem *base = phy->regs;
-	bool port_connected;
-
-	DBG("%s(%d) inst:[%d]\n", __func__, __LINE__, phy->inst);
-
-	val = readl(base + USB_PORTSC);
-	port_connected = val & USB_PORTSC_CCS;
-
-	return port_connected;
 }
