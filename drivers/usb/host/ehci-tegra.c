@@ -22,7 +22,6 @@
 #include <linux/usb/otg.h>
 #include <mach/usb_phy.h>
 #include <mach/iomap.h>
-#include "../../../../arch/arm/mach-tegra/tegra_usb_phy.h"
 
 #if 0
 #define EHCI_DBG(stuff...)	pr_info("ehci-tegra: " stuff)
@@ -44,8 +43,6 @@ struct tegra_ehci_hcd {
 	bool port_resuming;
 	unsigned int irq;
 	bool bus_suspended_fail;
-	bool device_connect;
-	bool device_suspend;
 };
 
 struct dma_align_buffer {
@@ -140,6 +137,7 @@ static int tegra_ehci_map_urb_for_dma(struct usb_hcd *hcd,
 static void tegra_ehci_unmap_urb_for_dma(struct usb_hcd *hcd,
 	struct urb *urb)
 {
+
 	if (urb->transfer_dma) {
 		enum dma_data_direction dir;
 		dir = usb_urb_dir_in(urb) ? DMA_FROM_DEVICE : DMA_TO_DEVICE;
@@ -345,16 +343,11 @@ static int tegra_ehci_bus_suspend(struct usb_hcd *hcd)
 	EHCI_DBG("%s() BEGIN\n", __func__);
 	mutex_lock(&tegra->sync_lock);
 	tegra->bus_suspended_fail = false;
-	tegra->device_connect = false;
 	err = ehci_bus_suspend(hcd);
 	if (err)
 		tegra->bus_suspended_fail = true;
-	else{
-		tegra->device_connect = check_connect_status(tegra->phy);
-		if(tegra->device_connect || (tegra->phy->inst == 1)){
-			tegra_usb_phy_suspend(tegra->phy);
-		}
-	}
+	else
+		tegra_usb_phy_suspend(tegra->phy);
 	mutex_unlock(&tegra->sync_lock);
 	EHCI_DBG("%s() END\n", __func__);
 
@@ -368,13 +361,9 @@ static int tegra_ehci_bus_resume(struct usb_hcd *hcd)
 	EHCI_DBG("%s() BEGIN\n", __func__);
 
 	mutex_lock(&tegra->sync_lock);
-	if(tegra->device_suspend || (tegra->phy->inst == 1))
-		tegra_usb_phy_resume(tegra->phy);
+	tegra_usb_phy_resume(tegra->phy);
 	err = ehci_bus_resume(hcd);
 	mutex_unlock(&tegra->sync_lock);
-	if(!err){
-		tegra->device_suspend = false;
-	}
 	EHCI_DBG("%s() END\n", __func__);
 
 	return err;
@@ -509,7 +498,6 @@ static int tegra_ehci_probe(struct platform_device *pdev)
 			otg_set_host(tegra->transceiver, &hcd->self);
 	}
 #endif
-	tegra->device_suspend = false;
 	return err;
 
 fail_phy:
@@ -538,10 +526,8 @@ static int tegra_ehci_suspend(struct platform_device *pdev, pm_message_t state)
 	/* bus suspend could have failed because of remote wakeup resume */
 	if (tegra->bus_suspended_fail)
 		return -EBUSY;
-	else{
-		tegra->device_suspend = true;
+	else
 		return tegra_usb_phy_power_off(tegra->phy);
-	}
 }
 #endif
 
