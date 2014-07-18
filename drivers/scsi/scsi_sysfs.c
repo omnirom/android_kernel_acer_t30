@@ -322,7 +322,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
 		kfree(evt);
 	}
 
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 	/* Freeing the queue signals to block that we're done */
 	scsi_free_queue(sdev->request_queue);
 #endif
@@ -940,7 +940,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
 	/* cause the request function to reject all I/O requests */
 	sdev->request_queue->queuedata = NULL;
 
-#if! (defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30))
+#if! (defined(CONFIG_ARCH_ACER_T30))
 	/* Freeing the queue signals to block that we're done */
 	scsi_free_queue(sdev->request_queue);
 #endif

@@ -1397,11 +1397,7 @@ static void pm_early_suspend(struct early_suspend *h)
 {
 	if (clk_wake)
 		clk_disable(clk_wake);
-#if defined(CONFIG_ARCH_ACER_T30)
-	pm_qos_update_request(&awake_cpu_freq_req, (s32)AWAKE_CPU_FREQ_MIN);
-#else
 	pm_qos_update_request(&awake_cpu_freq_req, PM_QOS_DEFAULT_VALUE);
-#endif
 }
 
 static void pm_late_resume(struct early_suspend *h)

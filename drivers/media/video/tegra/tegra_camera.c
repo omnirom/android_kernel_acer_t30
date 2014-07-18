@@ -227,7 +227,6 @@ static int tegra_camera_power_on(struct tegra_camera_dev *dev)
 
 	dev_dbg(dev->dev, "%s++\n", __func__);
 
-#if !defined(CONFIG_ARCH_ACER_T20)
 	/* Enable external power */
 	if (dev->reg) {
 		ret = regulator_enable(dev->reg);
@@ -238,7 +237,6 @@ static int tegra_camera_power_on(struct tegra_camera_dev *dev)
 			return ret;
 		}
 	}
-#endif
 #ifndef CONFIG_ARCH_TEGRA_2x_SOC
 	/* Unpowergate VE */
 	ret = tegra_unpowergate_partition(TEGRA_POWERGATE_VENC);
@@ -266,7 +264,6 @@ static int tegra_camera_power_off(struct tegra_camera_dev *dev)
 			"%s: powergate failed.\n",
 			__func__);
 #endif
-#if !defined(CONFIG_ARCH_ACER_T20)
 	/* Disable external power */
 	if (dev->reg) {
 		ret = regulator_disable(dev->reg);
@@ -277,7 +274,6 @@ static int tegra_camera_power_off(struct tegra_camera_dev *dev)
 			return ret;
 		}
 	}
-#endif
 	dev->power_on = 0;
 	tegra_camera_on = dev->power_on;
 	return ret;

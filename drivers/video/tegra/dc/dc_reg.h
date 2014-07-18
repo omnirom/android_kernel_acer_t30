@@ -560,8 +560,5 @@
 #define  NUM_AGG_PRI_LVLS		4
 #define  SD_AGG_PRI_LVL(x)		((x) >> 3)
 #define  SD_GET_AGG(x)			((x) & 0x7)
-#if defined(CONFIG_ACER_DIDIM_RULE)
-#define  SD_MAKE_AGG_PRI_LVL(x)		((x) << 3)
-#endif
 
 #endif

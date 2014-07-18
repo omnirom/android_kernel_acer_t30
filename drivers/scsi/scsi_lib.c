@@ -1250,7 +1250,7 @@ int scsi_prep_fn(struct request_queue *q, struct request *req)
 	struct scsi_device *sdev = q->queuedata;
 	int ret = BLKPREP_KILL;
 
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 	if (!sdev)
 		return ret;
 #endif

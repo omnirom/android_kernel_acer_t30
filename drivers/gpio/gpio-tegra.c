@@ -65,7 +65,7 @@ extern int acer_board_type;
 #define GPIO_MSK_CNF(x)		(GPIO_REG(x) + 0x800)
 #define GPIO_MSK_OE(x)		(GPIO_REG(x) + 0x810)
 #define GPIO_MSK_OUT(x)		(GPIO_REG(x) + 0X820)
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 #define GPIO_MSK_IN(x)		(GPIO_REG(x) + 0x830)
 #endif
 #define GPIO_MSK_INT_STA(x)	(GPIO_REG(x) + 0x840)
@@ -112,7 +112,7 @@ struct tegra_gpio_bank {
 	u32 int_enb[4];
 	u32 int_lvl[4];
 	u32 wake_enb[4];
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 	u32 in[4];
 #endif
 #endif
@@ -131,7 +131,7 @@ static struct tegra_gpio_bank tegra_gpio_banks[] = {
 #endif
 };
 
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 static struct tegra_gpio_bank tegra_gpio_sleep_banks[] = {
 	{.bank = 0, .irq = INT_GPIO1},
 	{.bank = 1, .irq = INT_GPIO2},
@@ -405,7 +405,7 @@ static void tegra_gpio_resume(void)
 			unsigned int gpio = (b<<5) | (p<<3);
 			__raw_writel(bank->cnf[p], GPIO_CNF(gpio));
 			__raw_writel(bank->out[p], GPIO_OUT(gpio));
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 			__raw_writel(bank->in[p], GPIO_IN(gpio));
 #endif
 			__raw_writel(bank->oe[p], GPIO_OE(gpio));
@@ -431,7 +431,7 @@ static int tegra_gpio_suspend(void)
 			unsigned int gpio = (b<<5) | (p<<3);
 			bank->cnf[p] = __raw_readl(GPIO_CNF(gpio));
 			bank->out[p] = __raw_readl(GPIO_OUT(gpio));
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 			bank->in[p] = __raw_readl(GPIO_IN(gpio));
 #endif
 			bank->oe[p] = __raw_readl(GPIO_OE(gpio));
@@ -615,7 +615,7 @@ static int dbg_gpio_show(struct seq_file *s, void *unused)
 {
 	int i;
 	int j;
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 	int k;
 
 	seq_printf(s, "GPIO Current State:\n------------------------------------------\n");
@@ -674,7 +674,7 @@ static const struct file_operations debug_fops = {
 	.release	= single_release,
 };
 
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 static int dbg_gpio_sleep_show(struct seq_file *s, void *unused)
 {
 	int i, j, k;
@@ -1167,7 +1167,7 @@ static int __init tegra_gpio_debuginit(void)
 {
 	(void) debugfs_create_file("tegra_gpio", S_IRUGO,
 					NULL, NULL, &debug_fops);
-#if defined(CONFIG_ARCH_ACER_T20) || defined(CONFIG_ARCH_ACER_T30)
+#if defined(CONFIG_ARCH_ACER_T30)
 	(void) debugfs_create_file("acer_gpio_sleep_table", S_IRUGO,
 					NULL, NULL, &debug_sleep_fops);
 #endif

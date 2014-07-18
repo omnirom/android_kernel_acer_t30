@@ -739,11 +739,9 @@ static void tegra_dc_set_out(struct tegra_dc *dc, struct tegra_dc_out *out)
 		dc->out_ops = &tegra_dc_rgb_ops;
 		break;
 
-#if defined(CONFIG_TEGRA_HDMI)
 	case TEGRA_DC_OUT_HDMI:
 		dc->out_ops = &tegra_dc_hdmi_ops;
 		break;
-#endif
 
 	case TEGRA_DC_OUT_DSI:
 		dc->out_ops = &tegra_dc_dsi_ops;
@@ -1964,13 +1962,11 @@ static int tegra_dc_suspend(struct nvhost_device *ndev, pm_message_t state)
 
 	if (dc->out && dc->out->postsuspend) {
 		dc->out->postsuspend();
-#if defined(CONFIG_TEGRA_HDMI)
 		if (dc->out->type && dc->out->type == TEGRA_DC_OUT_HDMI)
 			/*
 			 * avoid resume event due to voltage falling
 			 */
 			msleep(100);
-#endif
 	}
 
 	mutex_unlock(&dc->lock);

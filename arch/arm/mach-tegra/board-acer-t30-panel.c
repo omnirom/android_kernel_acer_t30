@@ -25,16 +25,12 @@
 #define LCD_CABC           TEGRA_GPIO_PH3    /* (J1/GMI_AD11/LCD_DCR)         */
 #define BL_ENABLE          TEGRA_GPIO_PH1    /* (E1/GMI_AD9/DISPOFF#)         */
 #define BL_PWM             TEGRA_GPIO_PH0    /* (G3/GMI_AD8/LCD_PWM_OUT )     */
-#if defined(CONFIG_TEGRA_HDMI)
 #define HDMI_HPD           TEGRA_GPIO_PN7    /* (AN23/HDMI_INT/HDMI_DET_T30S) */
 #define HDMI_5V            TEGRA_GPIO_PI4    /* (L5/GMI_RST_N/EN_HDMI_5V0)    */
 #define HDMI_5V_ALWAYS_ON  1
-#endif
 
-#if defined(CONFIG_TEGRA_HDMI)
 static struct regulator *acer_hdmi_reg = NULL;
 static struct regulator *acer_hdmi_pll = NULL;
-#endif
 
 static atomic_t sd_brightness = ATOMIC_INIT(255);
 static struct board_info board_info;
@@ -143,7 +139,6 @@ static int acer_panel_disable(void)
 	return 0;
 }
 
-#if defined(CONFIG_TEGRA_HDMI)
 #if !HDMI_5V_ALWAYS_ON
 static int acer_hdmi_vddio_enable(void)
 {
@@ -212,7 +207,6 @@ static int acer_hdmi_disable(void)
 
 	return 0;
 }
-#endif
 
 static struct resource acer_disp1_resources[] = {
 	{
@@ -331,10 +325,6 @@ static struct tegra_dc_sd_settings acer_sd_settings = {
 		},
 	.sd_brightness = &sd_brightness,
 	.bl_device = &acer_backlight_device,
-#if defined(CONFIG_ACER_DIDIM_RULE)
-	.aggress_list = {1, 3},
-	.scenario = 0,
-#endif
 };
 /* DISPLAY PICASSO 2 */
 static struct tegra_dc_mode acer_p2_panel_modes[] = {
@@ -456,7 +446,6 @@ static struct nvhost_device acer_pm_disp1_device = {
 /*
 	HDMI
 */
-#if defined(CONFIG_TEGRA_HDMI)
 static struct resource acer_disp2_resources[] = {
 	{
 		.name    = "irq",
@@ -525,7 +514,6 @@ static struct nvhost_device acer_disp2_device = {
 		.platform_data = &acer_disp2_pdata,
 	},
 };
-#endif
 
 /*
 	CARVEOUT
@@ -604,23 +592,18 @@ int __init acer_panel_init(void)
 	tegra_gpio_enable(LCD_VDD);
 	tegra_gpio_enable(LCD_CABC);
 	tegra_gpio_enable(BL_ENABLE);
-#if defined(CONFIG_TEGRA_HDMI)
 	tegra_gpio_enable(HDMI_HPD);
-#endif
 	gpio_request(LVDS_SHUTDOWN, "lvds_shutdown");
 	gpio_request(LCD_VDD, "lcd_vdd");
 	gpio_request(LCD_CABC, "lcd_cabc");
 	gpio_request(BL_ENABLE, "bl_enable");
-#if defined(CONFIG_TEGRA_HDMI)
 	gpio_request(HDMI_HPD, "hdmi_hpd");
-#endif
 
 	gpio_direction_output(LVDS_SHUTDOWN,1);
 	gpio_direction_output(LCD_VDD, 1);
 	gpio_direction_output(LCD_CABC,0);
 	gpio_direction_output(BL_ENABLE,1);
 
-#if defined(CONFIG_TEGRA_HDMI)
 	tegra_gpio_enable(HDMI_5V);
 	err = gpio_request(HDMI_5V, "hdmi_5V_enable");
 	if (err) {
@@ -634,7 +617,6 @@ int __init acer_panel_init(void)
 	if (err) {
 		pr_err("[HDMI] failed to set direction of hdmi_5V_enable\n");
 	}
-#endif
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	acer_panel_early_suspender.suspend = acer_panel_early_suspend;
@@ -676,14 +658,12 @@ int __init acer_panel_init(void)
 			err = nvhost_device_register(&acer_p2_disp1_device);
 		}
 	}
-#if defined(CONFIG_TEGRA_HDMI)
 	res = nvhost_get_resource_byname(&acer_disp2_device,
 				IORESOURCE_MEM, "fbmem");
 	res->start = tegra_fb2_start;
 	res->end = tegra_fb2_start + tegra_fb2_size - 1;
 	if (!err)
 		err = nvhost_device_register(&acer_disp2_device);
-#endif
 #endif
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_NVAVP)

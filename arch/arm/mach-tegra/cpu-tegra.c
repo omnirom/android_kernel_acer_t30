@@ -58,66 +58,6 @@ static int suspend_index;
 
 static bool force_policy_max;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-static int acer_power_mode;
-static struct kobject *power_mode_kobj;
-
-static size_t performance_mode[10] = {0, 0};
-static int performance_mode_size;
-static size_t balanced_mode[10] = {0, 0};
-static int balanced_mode_size;
-static size_t powersaving_mode[10] = {0, 0};
-static int powersaving_mode_size;
-
-int acer_power_mode_get(void)
-{
-	return acer_power_mode;
-}
-EXPORT_SYMBOL(acer_power_mode_get);
-
-static ssize_t power_mode_show(struct kobject *kobj, struct kobj_attribute *attr, char * buf)
-{
-	char *s = buf;
-	s += sprintf(s, "%d\n\r", acer_power_mode);
-	return (s - buf);
-}
-
-static ssize_t power_mode_store(struct kobject *kobj, struct kobj_attribute *attr, const char * buf, size_t n)
-{
-	int ret;
-	unsigned long val;
-
-	ret = strict_strtoul(buf, 0, &val);
-	if (ret < 0)
-		return ret;
-
-	acer_power_mode = val;
-	return n;
-}
-
-#define power_mode_attr(_name, _mode) \
-	static struct kobj_attribute _name##_attr = { \
-	.attr = { \
-	.name = __stringify(_name), \
-	.mode = _mode, \
-	}, \
-	.show = _name##_show, \
-	.store = _name##_store, \
-	}
-
-power_mode_attr(power_mode, 0660);
-
-static struct attribute * group[] = {
-	&power_mode_attr.attr,
-	NULL,
-};
-
-static struct attribute_group attr_group =
-{
-	.attrs = group,
-};
-#endif
-
 static int force_policy_max_set(const char *arg, const struct kernel_param *kp)
 {
 	int ret;
@@ -149,18 +89,6 @@ static unsigned int cpu_user_cap;
 
 static inline void _cpu_user_cap_set_locked(void)
 {
-#if defined(CONFIG_ARCH_ACER_T30)
-	if (acer_power_mode == 1) {  // performance
-		cpu_user_cap = 0;
-	}
-	else if (acer_power_mode == 2) {  // balanced
-		cpu_user_cap = balanced_mode[0];  // cpu freq
-	}
-	else if (acer_power_mode == 3) {  // power-saving
-		cpu_user_cap = powersaving_mode[0];  // cpu freq
-	}
-#endif
-
 #ifndef CONFIG_TEGRA_CPU_CAP_EXACT_FREQ
 	if (cpu_user_cap != 0) {
 		int i;
@@ -847,18 +775,6 @@ static int __init tegra_cpufreq_init(void)
 	if (ret)
 		return ret;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-	power_mode_kobj = kobject_create_and_add("dev-power_mode", NULL);
-	if (power_mode_kobj == NULL) {
-		pr_err("%s: subsystem_register failed\n", __FUNCTION__);
-	}
-	ret = sysfs_create_group(power_mode_kobj, &attr_group);
-
-	if(ret) {
-		pr_err("%s: sysfs_create_group failed, %d\n", __FUNCTION__, __LINE__);
-	}
-#endif
-
 	return cpufreq_register_driver(&tegra_cpufreq_driver);
 }
 
@@ -872,11 +788,7 @@ static void __exit tegra_cpufreq_exit(void)
 		&tegra_cpufreq_policy_nb, CPUFREQ_POLICY_NOTIFIER);
 }
 
-#if defined(CONFIG_ARCH_ACER_T30)
-module_param_array_named(performance_mode, performance_mode, uint, &performance_mode_size, 0660);
-module_param_array_named(balanced_mode, balanced_mode, uint, &balanced_mode_size, 0660);
-module_param_array_named(powersaving_mode, powersaving_mode, uint, &powersaving_mode_size, 0660);
-#endif
+
 MODULE_AUTHOR("Colin Cross <ccross@android.com>");
 MODULE_DESCRIPTION("cpufreq driver for Nvidia Tegra2");
 MODULE_LICENSE("GPL");

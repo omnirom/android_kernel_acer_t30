@@ -2336,22 +2336,11 @@ long do_mount(char *dev_name, char *dir_name, char *type_page,
 		   MS_NOATIME | MS_NODIRATIME | MS_RELATIME| MS_KERNMOUNT |
 		   MS_STRICTATIME);
 
-	if (flags & MS_REMOUNT) {
-#ifdef CONFIG_SECURE_MOUNT
-		char *dir = "/system";
-		if ((strcmp(dir,dir_name) == 0) && !(flags & MS_RDONLY)
-			&& (sys_getpid() > 1)) {
-			retval = -1;
-			printk("Operation not permitted or illegal root \n");
-		} else
-			retval = do_remount(&path, flags & ~MS_REMOUNT, mnt_flags,
-					    data_page);
-#else
+	if (flags & MS_REMOUNT)
 		retval = do_remount(&path, flags & ~MS_REMOUNT, mnt_flags,
 				    data_page);
-#endif
-	} else if (flags & MS_BIND)
-			retval = do_loopback(&path, dev_name, flags & MS_REC);
+	else if (flags & MS_BIND)
+		retval = do_loopback(&path, dev_name, flags & MS_REC);
 	else if (flags & (MS_SHARED | MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
 		retval = do_change_type(&path, flags);
 	else if (flags & MS_MOVE)

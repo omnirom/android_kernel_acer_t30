@@ -42,10 +42,6 @@
 #define ACER_DBG(fmt, arg...) do {} while (0)
 #endif
 
-#if defined(CONFIG_ARCH_ACER_T20) && !defined(CONFIG_MACH_PICASSO_E)
-extern void start_stop_psensor(bool);
-#endif
-
 extern struct acer_audio_data audio_data;
 
 struct notifier_block notifier;
@@ -61,11 +57,7 @@ static ssize_t codec_show(struct kobject *kobj, struct kobj_attribute *attr, cha
 static ssize_t dsp_show(struct kobject *kobj, struct kobj_attribute *attr, char * buf)
 {
 	char *s = buf;
-#if defined(CONFIG_ARCH_ACER_T20)
-	s += sprintf(s, "FM2018\n");
-#else
-  s += sprintf(s, "ES305\n");
-#endif
+	s += sprintf(s, "ES305\n");
 	return (s - buf);
 }
 
@@ -155,10 +147,6 @@ bool handset_mic_detect(struct snd_soc_codec *codec)
 		return false;
 	}
 
-#if defined(CONFIG_ARCH_ACER_T20) && !defined(CONFIG_MACH_PICASSO_E)
-	start_stop_psensor(false);
-#endif
-
 	snd_soc_update_bits(codec, WM8903_CLOCK_RATES_2,
 				WM8903_CLK_SYS_ENA_MASK, WM8903_CLK_SYS_ENA);
 	snd_soc_update_bits(codec, WM8903_WRITE_SEQUENCER_0,
@@ -196,10 +184,6 @@ bool handset_mic_detect(struct snd_soc_codec *codec)
 
 	snd_soc_update_bits(codec, WM8903_MIC_BIAS_CONTROL_0, WM8903_MICDET_ENA, 0);
 	snd_soc_update_bits(codec, WM8903_MIC_BIAS_CONTROL_0, WM8903_MICBIAS_ENA, is_recording);
-
-#if defined(CONFIG_ARCH_ACER_T20) && !defined(CONFIG_MACH_PICASSO_E)
-	start_stop_psensor(true);
-#endif
 
 	if (withMic > withoutMic) {
 		ACER_DBG("%s HEADSET_WITH_MIC !\n", __func__);
