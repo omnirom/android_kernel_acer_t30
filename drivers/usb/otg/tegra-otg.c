@@ -559,7 +559,9 @@ static int tegra_otg_suspend(struct device *dev)
 	struct platform_device *pdev = to_platform_device(dev);
 	struct tegra_otg_data *tegra = platform_get_drvdata(pdev);
 	struct otg_transceiver *otg = &tegra->otg;
+#if !defined(CONFIG_ARCH_ACER_T30)
 	int val;
+#endif
 
 	mutex_lock(&tegra->irq_work_mutex);
 	DBG("%s(%d) BEGIN state : %s\n", __func__, __LINE__,
