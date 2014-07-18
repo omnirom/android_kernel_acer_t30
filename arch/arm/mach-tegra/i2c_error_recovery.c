@@ -48,7 +48,6 @@ int arb_lost_recovery(int scl_gpio, int sda_gpio)
 			scl_gpio, ret);
 		return -EINVAL;;
 	}
-	tegra_gpio_enable(scl_gpio);
 
 	ret = gpio_request(sda_gpio, "sda_gpio");
 	if (ret < 0) {
@@ -56,7 +55,6 @@ int arb_lost_recovery(int scl_gpio, int sda_gpio)
 			sda_gpio, ret);
 		goto err;
 	}
-	tegra_gpio_enable(sda_gpio);
 #if defined(CONFIG_ARCH_ACER_T30)
 	if(gpio_get_value(sda_gpio)) {
 		gpio_direction_output(scl_gpio, 0);
@@ -134,9 +132,7 @@ int arb_lost_recovery(int scl_gpio, int sda_gpio)
 rv_quit:
 #endif
 	gpio_free(scl_gpio);
-	tegra_gpio_disable(scl_gpio);
 	gpio_free(sda_gpio);
-	tegra_gpio_disable(sda_gpio);
 
 	if (likely(recovered_successfully)) {
 		pr_err("arbitration lost recovered by re-try-count 0x%08x\n",
@@ -149,7 +145,6 @@ rv_quit:
 
 err:
 	gpio_free(scl_gpio);
-	tegra_gpio_disable(scl_gpio);
 	return ret;
 }
 
