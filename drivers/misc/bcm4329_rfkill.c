@@ -133,10 +133,6 @@ static void tegra_uart_fun_off(void)
         gpio_rts = UART3_RTS_GPIO;
 
         if(gpio_rx) {
-            tegra_gpio_enable(gpio_rx);
-            tegra_gpio_enable(gpio_tx);
-            tegra_gpio_enable(gpio_cts);
-            tegra_gpio_enable(gpio_rts);
             gpio_request(gpio_rx,"uart_rx_gpio");
             gpio_request(gpio_tx,"uart_tx_gpio");
             gpio_request(gpio_cts,"uart_cts_gpio");
@@ -309,7 +305,6 @@ static int bcm4329_rfkill_probe(struct platform_device *pdev)
 						"bcm4329_nreset_gpio");
 	if (res) {
 		bcm4329_rfkill->gpio_reset = res->start;
-		tegra_gpio_enable(bcm4329_rfkill->gpio_reset);
 		ret = gpio_request(bcm4329_rfkill->gpio_reset,
 						"bcm4329_nreset_gpio");
 	} else {
@@ -323,7 +318,6 @@ static int bcm4329_rfkill_probe(struct platform_device *pdev)
 						"bcm4329_nshutdown_gpio");
 	if (res) {
 		bcm4329_rfkill->gpio_shutdown = res->start;
-		tegra_gpio_enable(bcm4329_rfkill->gpio_shutdown);
 		ret = gpio_request(bcm4329_rfkill->gpio_shutdown,
 						"bcm4329_nshutdown_gpio");
 	} else {
