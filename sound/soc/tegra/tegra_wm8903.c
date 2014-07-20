@@ -576,13 +576,8 @@ static int tegra_wm8903_event_int_mic(struct snd_soc_dapm_widget *w,
 	if (!(machine->gpio_requested & GPIO_INT_MIC_EN))
 		return 0;
 
-#ifdef CONFIG_ACER_FM_SINGLE_MIC
-	set_int_mic_state(SND_SOC_DAPM_EVENT_ON(event) ? true : false);
-	mic_switch(pdata);
-#else
 	gpio_set_value_cansleep(pdata->gpio_int_mic_en,
 				SND_SOC_DAPM_EVENT_ON(event));
-#endif
 
 	return 0;
 }
@@ -599,19 +594,11 @@ static int tegra_wm8903_event_ext_mic(struct snd_soc_dapm_widget *w,
 	wm8903_event_printf(__func__, event);
 #endif
 
-#ifdef CONFIG_ACER_FM_SINGLE_MIC
-	if (!(machine->gpio_requested & GPIO_INT_MIC_EN))
-		return 0;
-
-	set_ext_mic_state(SND_SOC_DAPM_EVENT_ON(event) ? true : false);
-	mic_switch(pdata);
-#else
 	if (!(machine->gpio_requested & GPIO_EXT_MIC_EN))
 		return 0;
 
 	gpio_set_value_cansleep(pdata->gpio_ext_mic_en,
 				SND_SOC_DAPM_EVENT_ON(event));
-#endif
 
 	return 0;
 }
@@ -871,9 +858,6 @@ static int tegra_wm8903_init(struct snd_soc_pcm_runtime *rtd)
 
 	snd_soc_dapm_disable_pin(dapm, "Mic Jack");
 	snd_soc_dapm_disable_pin(dapm, "Int Mic");
-#if !defined(CONFIG_ARCH_ACER_T30)
-	snd_soc_dapm_disable_pin(dapm, "LineIn");
-#endif
 
 	audio_data.codec = codec;
 	audio_data.gpio.spkr_en = pdata->gpio_spkr_en;
