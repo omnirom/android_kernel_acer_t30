@@ -45,9 +45,9 @@ static void acer_backlight_work_queue(struct work_struct *work)
 
 static int acer_backlight_init(struct device *dev)
 {
-	/* TBR: disable gpio to  change function pin */
+	/* TBR: disable gpio to change function pin */
 	tegra_gpio_disable(BL_PWM);
-	INIT_DELAYED_WORK(&bl_en_gpio,acer_backlight_work_queue);
+	INIT_DELAYED_WORK(&bl_en_gpio, acer_backlight_work_queue);
 	return 0;
 }
 
@@ -588,11 +588,6 @@ int __init acer_panel_init(void)
 	acer_carveouts[1].base = tegra_carveout_start;
 	acer_carveouts[1].size = tegra_carveout_size;
 
-	tegra_gpio_enable(LVDS_SHUTDOWN);
-	tegra_gpio_enable(LCD_VDD);
-	tegra_gpio_enable(LCD_CABC);
-	tegra_gpio_enable(BL_ENABLE);
-	tegra_gpio_enable(HDMI_HPD);
 	gpio_request(LVDS_SHUTDOWN, "lvds_shutdown");
 	gpio_request(LCD_VDD, "lcd_vdd");
 	gpio_request(LCD_CABC, "lcd_cabc");
@@ -604,7 +599,6 @@ int __init acer_panel_init(void)
 	gpio_direction_output(LCD_CABC,0);
 	gpio_direction_output(BL_ENABLE,1);
 
-	tegra_gpio_enable(HDMI_5V);
 	err = gpio_request(HDMI_5V, "hdmi_5V_enable");
 	if (err) {
 		pr_err("[HDMI] request 5V_enable failed\n");
