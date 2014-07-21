@@ -297,10 +297,6 @@ static void tps6591x_power_off(void)
 	struct device *dev = NULL;
 	int ret;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-	printk("%s\n", __func__);
-#endif
-
 	if (!tps6591x_i2c_client)
 		return;
 
