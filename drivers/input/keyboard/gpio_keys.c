@@ -339,20 +339,14 @@ static void gpio_keys_gpio_report_event(struct gpio_button_data *bdata)
 	unsigned int type = button->type ?: EV_KEY;
 #if defined(CONFIG_ARCH_ACER_T30)
 	int state;
-	if ((p2_wakeup == POWER_KEY_ACT) && (button->code == KEY_POWER))
-	{
+	if ((p2_wakeup == POWER_KEY_ACT) && (button->code == KEY_POWER)) {
 		state = p2_wakeup ^ button->active_low;
 		p2_wakeup = 1;
-	}
-	else
-	{
+	} else {
 		state = (gpio_get_value(button->gpio) ? 1 : 0) ^ button->active_low;
 	}
 #else
 	int state = (gpio_get_value_cansleep(button->gpio) ? 1 : 0) ^ button->active_low;
-#endif
-#if defined(CONFIG_ARCH_ACER_T30)
-	pr_info("%s: button->code = %d, state = %d\n", __func__, button->code, !!state);
 #endif
 
 	if (type == EV_ABS) {
@@ -383,9 +377,7 @@ static irqreturn_t gpio_keys_gpio_isr(int irq, void *dev_id)
 {
 	struct gpio_button_data *bdata = dev_id;
 #if defined(CONFIG_ARCH_ACER_T30)
-        struct gpio_keys_button *button = bdata->button;
-
-	pr_info("%s: button->gpio = %d\n", __func__, button->gpio);
+	struct gpio_keys_button *button = bdata->button;
 #endif
 
 	BUG_ON(irq != bdata->irq);
@@ -832,10 +824,6 @@ static int gpio_keys_resume(struct device *dev)
 	int wakeup_key = KEY_RESERVED;
 	int i;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-	pr_info("%s\n", __func__);
-#endif
-
 	if (pdata && pdata->wakeup_key)
 		wakeup_key = pdata->wakeup_key();
 
@@ -846,9 +834,6 @@ static int gpio_keys_resume(struct device *dev)
 			if (wakeup_key == bdata->button->code) {
 				unsigned int type = bdata->button->type ?: EV_KEY;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-				pr_info("%s: wakeup_key is pressed\n", __func__);
-#endif
 				input_event(ddata->input, type, bdata->button->code, 1);
 				input_event(ddata->input, type, bdata->button->code, 0);
 				input_sync(ddata->input);
