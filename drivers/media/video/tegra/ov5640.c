@@ -24,12 +24,6 @@
 #include <media/ov5640.h>
 #include "ov5640_setting.h"
 
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-extern void tps61050_turn_on_torch(void);
-extern void tps61050_turn_off_torch(void);
-extern void tps61050_turn_on_flash(void);
-extern void tps61050_turn_off_flash(void);
-#endif
 
 struct ov5640_info {
 	int mode;
@@ -37,11 +31,6 @@ struct ov5640_info {
 	struct ov5640_platform_data *pdata;
 	int af_initialized;
 	int focus_mode;
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-	int flash_mode;
-	int flash_status;
-	int lowlight_mode;
-#endif
 	int white_balance_mode;
 	int color_effect_mode;
 	int exposure_mode;
@@ -177,24 +166,6 @@ static int ov5640_sequential_write_table(struct ov5640_info *info, u16 addr, u8 
 	return 0;
 }
 
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-static int ov5640_is_lowlight_mode(struct ov5640_info *info)
-{
-	u8 reg_350C, reg_350D;
-	u16 AEC_PK_VTS;
-
-	ov5640_read_reg(info->i2c_client, 0x350C, &reg_350C);
-	ov5640_read_reg(info->i2c_client, 0x350D, &reg_350D);
-	AEC_PK_VTS = (u16)reg_350C << 8 | (u16)reg_350D;
-	pr_info("%s: AEC_PK_VTS = 0x%04X\n", __func__, AEC_PK_VTS);
-
-	if (AEC_PK_VTS > 0)
-		return 1;
-	else
-		return 0;
-}
-#endif
-
 static int ov5640_write_table(struct ov5640_info *info, const struct ov5640_reg table[])
 {
 	int err;
@@ -321,25 +292,8 @@ static int ov5640_af_trigger(struct ov5640_info *info, int trigger)
 	pr_info("%s: trigger = %d\n", __func__, trigger);
 
 	if (trigger == OV5640_AF_TRIGGER) {
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-		if (info->flash_mode == OV5640_FlashMode_Auto) {
-			info->lowlight_mode = ov5640_is_lowlight_mode(info);
-			if (info->lowlight_mode)
-				tps61050_turn_on_torch();
-		} else if (info->flash_mode == OV5640_FlashMode_On)
-			tps61050_turn_on_torch();
-#endif
-
 		err = ov5640_write_reg(info->i2c_client, OV5640_AF_CMD_MAIN, OV5640_TRIG_AUTO_FOCUS);
 	} else {
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-		// the IOCTL command AF_ABORT is always running when finishing taking a picture,
-		// we can use this call flow to control flash
-		tps61050_turn_off_flash();
-		info->flash_status = 0;
-		info->lowlight_mode = 0;
-#endif
-
 		err = ov5640_write_reg(info->i2c_client, OV5640_AF_CMD_MAIN, OV5640_RELEASE_FOCUS);
 	}
 
@@ -357,9 +311,6 @@ static int ov5640_get_af_status(struct ov5640_info *info)
 	if (fw_status == OV5640_FW_S_FOCUSING || fw_status == OV5640_FW_S_IDLE)
 		af_status = 0;  // AF is running
 	else if (fw_status == OV5640_FW_S_FOCUSED) {
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-		tps61050_turn_off_torch();
-#endif
 
 		ov5640_read_reg(info->i2c_client, OV5640_AF_CMD_PARA4, &s_zone);
 		if (s_zone)
@@ -373,42 +324,6 @@ static int ov5640_get_af_status(struct ov5640_info *info)
 
 	return af_status;
 }
-
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-static int ov5640_set_flash_mode(struct ov5640_info *info, int flash_mode)
-{
-	pr_info("%s: flash_mode = %d\n", __func__, flash_mode);
-
-	info->flash_mode = flash_mode;
-	switch (flash_mode) {
-		case OV5640_FlashMode_Auto:
-			break;
-
-		case OV5640_FlashMode_On:
-			break;
-
-		case OV5640_FlashMode_Off:
-			tps61050_turn_off_flash();
-			break;
-
-		case OV5640_FlashMode_Torch:
-			tps61050_turn_on_torch();
-			break;
-
-		default:
-			break;
-	}
-
-	return 0;
-}
-
-static int ov5640_get_flash_status(struct ov5640_info *info)
-{
-	pr_info("%s: flash_status = %d\n", __func__, info->flash_status);
-
-	return info->flash_status;
-}
-#endif
 
 static int ov5640_set_white_balance(struct ov5640_info *info, int white_balance)
 {
@@ -566,21 +481,6 @@ static int ov5640_capture_cmd(struct ov5640_info *info)
 {
 	pr_info("%s\n", __func__);
 
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-	if (info->flash_mode == OV5640_FlashMode_Auto) {
-		if (info->lowlight_mode ||
-			(info->focus_mode==OV5640_AF_ABORT && ov5640_is_lowlight_mode(info))) {
-			tps61050_turn_on_flash();
-			info->flash_status = 1;
-			msleep(200);
-		}
-	} else if (info->flash_mode == OV5640_FlashMode_On) {
-		tps61050_turn_on_flash();
-		info->flash_status = 1;
-		msleep(200);
-	}
-#endif
-
 	return 0;
 }
 
@@ -632,14 +532,6 @@ static long ov5640_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 				return ov5640_get_af_status(info);
 			else
 				return -1;
-
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-		case OV5640_IOCTL_SET_FLASH_MODE:
-			return ov5640_set_flash_mode(info, arg);
-
-		case OV5640_IOCTL_GET_FLASH_STATUS:
-			return ov5640_get_flash_status(info);
-#endif
 
 		case OV5640_IOCTL_SET_WHITE_BALANCE:
 			return ov5640_set_white_balance(info, arg);
@@ -823,10 +715,6 @@ static int ov5640_release(struct inode *inode, struct file *file)
 
 	// release VCM to reduce power consumption
 	ov5640_write_reg(info->i2c_client, OV5640_AF_CMD_MAIN, OV5640_RELEASE_FOCUS);
-
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-	tps61050_turn_off_flash();
-#endif
 
 	// 0x300E[4:3] stands for MIPI TX/RX PHY power down
 	// while in MIPI mode, set register 0x300E[4:3] to 2'b11
