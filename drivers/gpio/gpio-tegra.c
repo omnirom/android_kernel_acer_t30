@@ -76,7 +76,6 @@ extern int acer_board_type;
 				 GPIO_BANK(x) * 0x100 +		\
 				 GPIO_PORT(x) * 4)
 
-#if defined(CONFIG_ARCH_ACER_T30)
 #define GPIO_MSK_CNF(x)		(GPIO_REG(x) + 0x80)
 #define GPIO_MSK_OE(x)		(GPIO_REG(x) + 0x90)
 #define GPIO_MSK_OUT(x)		(GPIO_REG(x) + 0XA0)
@@ -85,7 +84,6 @@ extern int acer_board_type;
 #define GPIO_MSK_INT_LVL(x)	(GPIO_REG(x) + 0xE0)
 #endif
 
-// GPIO configuration
 #define GPIO_INT_LVL_MASK		0x010101
 #define GPIO_INT_LVL_EDGE_RISING	0x000101
 #define GPIO_INT_LVL_EDGE_FALLING	0x000100
@@ -93,12 +91,12 @@ extern int acer_board_type;
 #define GPIO_INT_LVL_LEVEL_HIGH		0x000001
 #define GPIO_INT_LVL_LEVEL_LOW		0x000000
 
+#if defined(CONFIG_ARCH_ACER_T30)
 #define	BANK_MASK	0b111
 #define	OE_MASK		0b11
 #define	GPIOBIT_MASK	0b111
 
 extern int acer_sku;
-
 #endif // GPIO configuration
 
 struct tegra_gpio_bank {
