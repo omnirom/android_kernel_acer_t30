@@ -100,7 +100,6 @@ static void usb_host_vbus_enable(struct tegra_usb_phy *phy, bool enable)
 		if (gpio == -1)
 			return;
 		gpio_set_value_cansleep(gpio, enable ? 1 : 0);
-		pr_info("inst:[%d] vbus_gpio: %d is %d\n", phy->inst,gpio,enable);
 	}
 }
 
