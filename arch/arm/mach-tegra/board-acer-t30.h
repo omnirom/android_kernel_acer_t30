@@ -204,7 +204,6 @@ int cardhu_pm299_regulator_init(void);
 #define BOARD_PICASSO_2  0
 #define BOARD_PICASSO_M  1
 #define BOARD_PICASSO_MF 2
-#define BOARD_PICASSO_E2 3
 
 /* Board ID */
 #define BOARD_EVT       0

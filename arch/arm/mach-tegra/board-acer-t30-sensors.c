@@ -79,14 +79,6 @@ struct camera_gpio {
 		.init = _init,            \
 	}
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-static struct camera_gpio camera_gpio_table[] = {
-	[0] = CAMERA_GPIO(TEGRA_GPIO_PR2,  "en_cam_1v8",  1),
-	[1] = CAMERA_GPIO(TEGRA_GPIO_PQ3,  "en_cam_2v8",  0),
-	[2] = CAMERA_GPIO(TEGRA_GPIO_PBB5, "2m_cam_pwdn", 1),
-	[3] = CAMERA_GPIO(TEGRA_GPIO_PBB0, "2m_cam_rst",  0),
-};
-#else
 static struct camera_gpio camera_gpio_table[] = {
 	[0] = CAMERA_GPIO(TEGRA_GPIO_PR2,  "en_cam_1v8",  1),
 	[1] = CAMERA_GPIO(TEGRA_GPIO_PQ3,  "en_cam_2v8",  0),
@@ -95,7 +87,6 @@ static struct camera_gpio camera_gpio_table[] = {
 	[4] = CAMERA_GPIO(TEGRA_GPIO_PBB5, "2m_cam_pwdn", 1),
 	[5] = CAMERA_GPIO(TEGRA_GPIO_PBB0, "2m_cam_rst",  0),
 };
-#endif
 
 #define EN_CAM_1V8        camera_gpio_table[0].gpio  // EN_CAM_1V8#
 #define EN_CAM_2V8        camera_gpio_table[1].gpio  // EN_CAM_2V8
@@ -126,7 +117,7 @@ static int cardhu_camera_init(void)
 		gpio_direction_output(camera_gpio_table[i].gpio, camera_gpio_table[i].init);
 	}
 
-#if defined(CONFIG_MACH_PICASSO_M) || defined(CONFIG_MACH_PICASSO2) || defined(CONFIG_MACH_PICASSO_MF)
+#if defined(CONFIG_MACH_PICASSO_M) || defined(CONFIG_MACH_PICASSO_MF)
 	// turn on camera power
 	gpio_direction_output(EN_CAM_1V8, 0);
 	msleep(3);
@@ -146,21 +137,6 @@ static int cardhu_camera_init(void)
 	gpio_direction_output(OV9740_CAM_RST,  1);
 	msleep(20);
 	gpio_direction_output(OV9740_CAM_PWDN, 1);
-#endif
-
-#if defined(CONFIG_MACH_PICASSO_E2)
-	// turn on camera power
-	gpio_direction_output(EN_CAM_1V8, 0);
-	msleep(3);
-	// do MT9D115 hardware reset and enter hardware standby mode
-	gpio_direction_output(MT9D115_CAM_RST,  0);
-	msleep(1);
-	gpio_direction_output(MT9D115_CAM_RST,  1);
-	msleep(1);
-	// AVDD should pull high after the RESET BAR pull high
-	gpio_direction_output(EN_CAM_2V8, 1);
-	msleep(1);
-	gpio_direction_output(MT9D115_CAM_PWDN, 1);
 #endif
 
 	return 0;
@@ -1141,32 +1117,20 @@ static struct mpu_platform_data mpu_data = {
 	},
 	/* compass */
 	.compass = {
-#ifdef CONFIG_MACH_PICASSO_E2
-	.get_slave_descr = NULL,
-#else
 #ifdef CONFIG_INV_SENSORS_MODULE
 	.get_slave_descr = NULL,
 #else
 	.get_slave_descr = get_compass_slave_descr,
 #endif
-#endif
 	.irq         = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PX7),
 	.adapt_num   = 0,
 	.bus         = EXT_SLAVE_BUS_PRIMARY,
 	.address     = 0x0C,
-#ifdef CONFIG_MACH_PICASSO_E2
-	.orientation = {
-		0,  0,  0,
-		0,  0,  0,
-		0,  0,  0
-	},
-#else
 	.orientation = {
 		1,  0,  0,
 		0, -1,  0,
 		0,  0, -1
 	},
-#endif
 	},
 };
 
@@ -1183,17 +1147,7 @@ static void cardhu_mpu_power_on(void)
 	int ret;
 	int en_sensor_vdd;
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-	extern int acer_sku;
-	extern int acer_board_id;
-
-	if (acer_board_id == BOARD_EVT && acer_sku == BOARD_SKU_WIFI)
-		en_sensor_vdd = SENSOR_3V3;
-	else
-		en_sensor_vdd = SENSOR_3V3_2;
-#else
 	en_sensor_vdd = SENSOR_3V3_2;
-#endif
 	ret = gpio_request(en_sensor_vdd, "sensor_vdd_power_en");
 	if (ret < 0)
 		pr_err("%s: gpio_request failed for gpio %s\n",

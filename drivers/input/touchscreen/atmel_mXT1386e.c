@@ -22,12 +22,8 @@
 
 #if defined(CONFIG_MACH_PICASSO_M)
 #include <linux/input/mxt1386e_pm.h>
-#elif defined(CONFIG_MACH_PICASSO2)
-#include <linux/input/mxt1386e_p2.h>
 #elif defined(CONFIG_MACH_PICASSO_MF)
 #include <linux/input/mxt1386e_pmf.h>
-#else
-#include <linux/input/mxt1386e_p2.h>
 #endif
 
 #define ATMEL1386E_IOCTL_MAGIC 't'

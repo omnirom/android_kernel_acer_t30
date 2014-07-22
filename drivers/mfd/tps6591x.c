@@ -39,9 +39,6 @@
 #define DEVCTRL_DEV_ON		(1 << 2)
 #define DEVCTRL_DEV_SLP		(1 << 1)
 #define TPS6591X_DEVCTRL2	0x40
-#if defined(CONFIG_MACH_PICASSO_E2)
-#define DEVCTRL_DEV_OFF		(1 << 0)
-#endif
 
 /* device sleep on registers */
 #define TPS6591X_SLEEP_KEEP_ON	0x42
@@ -69,11 +66,6 @@
 #define TPS6591X_GPIO_SLEEP	7
 #define TPS6591X_GPIO_PDEN	3
 #define TPS6591X_GPIO_DIR	2
-#if defined(CONFIG_MACH_PICASSO_E2)
-#define TPS6591X_VDDCTRL_ADD	0x27
-#define TPS6591X_VDDCTRL_STATE_OFF	0x0
-#define TPS6591X_VDDCTRL_STATE_MASK	0x3
-#endif
 
 enum irq_type {
 	EVENT,
@@ -316,17 +308,7 @@ static void tps6591x_power_off(void)
 	if (tps6591x_set_bits(dev, TPS6591X_DEVCTRL, DEVCTRL_PWR_OFF_SEQ) < 0)
 		return;
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-	pr_info("%s(): Clearing DEV_SLP\n", __func__);
-	if (tps6591x_clr_bits(dev, TPS6591X_DEVCTRL, DEVCTRL_DEV_SLP) < 0)
-		return;
-
-	pr_info("%s(): Setting device off and clearing dev-on\n", __func__);
-	if (tps6591x_update(dev, TPS6591X_DEVCTRL, DEVCTRL_DEV_OFF, DEVCTRL_DEV_OFF | DEVCTRL_DEV_ON) < 0)
-		return;
-#else
 	tps6591x_clr_bits(dev, TPS6591X_DEVCTRL, DEVCTRL_DEV_ON);
-#endif
 }
 
 static int tps6591x_gpio_get(struct gpio_chip *gc, unsigned offset)

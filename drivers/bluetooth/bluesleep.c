@@ -159,7 +159,7 @@ static void hsuart_power(int on)
 {
 	if (test_bit(BT_SUSPEND, &flags))
 		return;
-#if defined(CONFIG_MACH_PICASSO2) || defined(CONFIG_MACH_PICASSO_M) || defined(CONFIG_MACH_PICASSO_E2) || defined(CONFIG_MACH_PICASSO_MF)
+#if defined(CONFIG_MACH_PICASSO_M) || defined(CONFIG_MACH_PICASSO_MF)
 	return;
 #endif
 	if (bsi->uport == NULL)

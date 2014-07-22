@@ -1076,11 +1076,6 @@ int mpu_probe(struct i2c_client *client, const struct i2c_device_id *devid)
 	 * from user-space for power notifications for approx
 	 * 60 sec. Refer NV bug 858630 for more details.
 	 */
-#if defined(CONFIG_MACH_PICASSO2)
-	mpu->nb.notifier_call = mpu_pm_notifier_callback;
-	mpu->nb.priority = 0;
-	register_pm_notifier(&mpu->nb);
-#endif
 	pdata = (struct mpu_platform_data *)client->dev.platform_data;
 	if (!pdata) {
 		dev_WARN(&client->adapter->dev,

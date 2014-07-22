@@ -20,7 +20,6 @@
 #include "board.h"
 #include "board-acer-t30.h"
 #include "gpio-names.h"
-#include "pinmux-pe2.c"
 
 extern int acer_board_id;
 extern int acer_board_type;
@@ -450,9 +449,6 @@ int __init cardhu_pinmux_init(void)
 	case BOARD_PICASSO_MF:
 		tegra_pinmux_config_table(picasso2_pinmux_common, ARRAY_SIZE(picasso2_pinmux_common));
 		break;
-	case BOARD_PICASSO_E2:
-		tegra_pinmux_config_table(picasso_E2_pinmux_common, ARRAY_SIZE(picasso_E2_pinmux_common));
-		break;
 	}
 
 	switch (acer_board_type) {
@@ -488,25 +484,6 @@ int __init cardhu_pinmux_init(void)
 	case BOARD_PICASSO_MF:
 		tegra_pinmux_config_table(cardhu_pinmux_sensor_dvt2,
 					ARRAY_SIZE(cardhu_pinmux_sensor_dvt2));
-		break;
-	case BOARD_PICASSO_E2:
-		switch (acer_board_id) {
-		case BOARD_EVT:
-			if (acer_sku == BOARD_SKU_WIFI)
-				tegra_pinmux_config_table(cardhu_pinmux_sensor_dvt1,
-						ARRAY_SIZE(cardhu_pinmux_sensor_dvt1));
-			else
-				tegra_pinmux_config_table(cardhu_pinmux_sensor_dvt2,
-						ARRAY_SIZE(cardhu_pinmux_sensor_dvt2));
-			break;
-		case BOARD_DVT1:
-			tegra_pinmux_config_table(cardhu_pinmux_sensor_dvt2,
-						ARRAY_SIZE(cardhu_pinmux_sensor_dvt2));
-			break;
-		default:
-			tegra_pinmux_config_table(cardhu_pinmux_sensor_dvt2,
-						ARRAY_SIZE(cardhu_pinmux_sensor_dvt2));
-		}
 		break;
 	}
 	tegra_drive_pinmux_config_table(cardhu_drive_pinmux,

@@ -39,7 +39,6 @@
 #if defined(CONFIG_ARCH_ACER_T30)
 #include "../../../arch/arm/mach-tegra/gpio-names.h"
 #include "../../../arch/arm/mach-tegra/board-acer-t30.h"
-#include "gpio-sleep-table-pe2.c"
 extern int acer_board_id;
 extern int acer_board_type;
 #endif
@@ -65,9 +64,6 @@ extern int acer_board_type;
 #define GPIO_MSK_CNF(x)		(GPIO_REG(x) + 0x800)
 #define GPIO_MSK_OE(x)		(GPIO_REG(x) + 0x810)
 #define GPIO_MSK_OUT(x)		(GPIO_REG(x) + 0X820)
-#if defined(CONFIG_ARCH_ACER_T30)
-#define GPIO_MSK_IN(x)		(GPIO_REG(x) + 0x830)
-#endif
 #define GPIO_MSK_INT_STA(x)	(GPIO_REG(x) + 0x840)
 #define GPIO_MSK_INT_ENB(x)	(GPIO_REG(x) + 0x850)
 #define GPIO_MSK_INT_LVL(x)	(GPIO_REG(x) + 0x860)
@@ -776,11 +772,7 @@ static struct gpio_table gpio_unused_init_table[] = {
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PCC5, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // CLK2_REQ
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PV2, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // GPIO_PV2
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PV3, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // GPIO_PV3
-#if defined(CONFIG_MACH_PICASSO_E2)
-	GPIO_CONFIG(NULL, TEGRA_GPIO_PD1, GPIO_ENABLE, GPIO_HIGH, GPIO_OUTPUT), // SDMMC3_DAT4
-#else
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PD1, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // SDMMC3_DAT4
-#endif
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PD0, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // SDMMC3_DAT5
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PD3, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // SDMMC3_DAT6
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PD4, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // SDMMC3_DAT7
@@ -790,9 +782,6 @@ static struct gpio_table gpio_unused_init_table[] = {
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PR3, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // KB_ROW3
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PR4, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // KB_ROW4
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PR6, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // KB_ROW6
-#if !defined(CONFIG_ARCH_ACER_T30)
-	GPIO_CONFIG(NULL, TEGRA_GPIO_PR7, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // KB_ROW7
-#endif
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PS1, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // KB_ROW9
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PS3, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // KB_ROW11
 	//GPIO_CONFIG(NULL, TEGRA_GPIO_PK5, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // OWR
@@ -813,13 +802,8 @@ static struct gpio_table gpio_wifi_sku_table[] = {
 };
 
 static struct gpio_table gpio_3G_sku_table[] = {
-#if defined(CONFIG_MACH_PICASSO_E2)
-	GPIO_CONFIG(NULL, TEGRA_GPIO_PI7,  GPIO_ENABLE, GPIO_LOW,  GPIO_OUTPUT), // GMI_WAIT  (3G_DISABLE#)
-	GPIO_CONFIG(NULL, TEGRA_GPIO_PBB7,GPIO_ENABLE, GPIO_HIGH, GPIO_OUTPUT), // GPIO_PBB7 (3G_DISABLE2#)
-#else
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PI7,  GPIO_ENABLE, GPIO_HIGH, GPIO_OUTPUT), // GMI_WAIT  (3G_DISABLE#)
 	GPIO_CONFIG(NULL, TEGRA_GPIO_PBB7, GPIO_ENABLE, GPIO_LOW, GPIO_OUTPUT), // GPIO_PBB7 (3G_DISABLE2#)
-#endif
 };
 
 static struct gpio_table gpio_sleep_init_table[] = {
@@ -983,10 +967,6 @@ void gpio_unused_init(void)
 	int ret;
 	unsigned long flags;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-	printk("%s\n", __func__);
-#endif
-
 	local_irq_save(flags);
 	switch(acer_board_type) {
 	case BOARD_PICASSO_2:
@@ -1010,27 +990,6 @@ void gpio_unused_init(void)
 					pr_err("%s : GPIO neither output nor input \n", __func__);
 			}
 		}
-		break;
-	case BOARD_PICASSO_E2:
-		for (i = 0; i < ARRAY_SIZE(picasso_E2_gpio_unused_init_table); i++) {
-			if (picasso_E2_gpio_unused_init_table[i].enabled) {
-				gpio_request(picasso_E2_gpio_unused_init_table[i].gpio, picasso_E2_gpio_unused_init_table[i].name);
-				if (picasso_E2_gpio_unused_init_table[i].direction == GPIO_OUTPUT) {
-					ret = gpio_direction_output(picasso_E2_gpio_unused_init_table[i].gpio, picasso_E2_gpio_unused_init_table[i].value);
-					if(ret)
-						pr_err("---%s:  GPIO(%d) init error\n", __func__, picasso_E2_gpio_unused_init_table[i].gpio);
-					else
-					tegra_gpio_enable(picasso_E2_gpio_unused_init_table[i].gpio);
-				}
-				else if (picasso_E2_gpio_unused_init_table[i].direction == GPIO_INPUT) {
-					gpio_direction_input(picasso_E2_gpio_unused_init_table[i].gpio);
-					tegra_gpio_enable(picasso_E2_gpio_unused_init_table[i].gpio);
-				}
-				else
-					pr_err("%s : GPIO neither output nor input \n", __func__);
-			}
-		}
-		printk("====  %s: GPIO unused init OK ====\n", __func__);
 		break;
 	}
 
@@ -1084,10 +1043,6 @@ void gpio_sleep_init(void)
 	unsigned int banks_idx, banks_oe_idx, bit;
 	unsigned long flags;
 
-#if defined(CONFIG_ARCH_ACER_T30)
-	printk("%s\n", __func__);
-#endif
-
 	local_irq_save(flags);
 	switch(acer_board_type) {
 	case BOARD_PICASSO_2:
@@ -1121,38 +1076,6 @@ void gpio_sleep_init(void)
 				else
 					value &= ~(0x1 << bit);
 				__raw_writel(value, GPIO_OUT(gpio_sleep_init_table[i].gpio));
-			}
-		}
-		break;
-	case BOARD_PICASSO_E2:
-		for (i = 0 ; i < ARRAY_SIZE(picasso_E2_gpio_sleep_init_table); i++) {
-			if (picasso_E2_gpio_sleep_init_table[i].enabled) {
-
-				// get gpio index
-				banks_idx = (picasso_E2_gpio_sleep_init_table[i].gpio >> 5) & BANK_MASK;
-				banks_oe_idx = (picasso_E2_gpio_sleep_init_table[i].gpio >> 3) & OE_MASK;
-				bit = picasso_E2_gpio_sleep_init_table[i].gpio & GPIOBIT_MASK;
-
-				// cnf
-				value = __raw_readl(GPIO_CNF(picasso_E2_gpio_sleep_init_table[i].gpio));
-				value |= (0x1 << bit);
-				__raw_writel(value, GPIO_CNF(picasso_E2_gpio_sleep_init_table[i].gpio));
-
-				// oe
-				value = __raw_readl(GPIO_OE(picasso_E2_gpio_sleep_init_table[i].gpio));
-				if (picasso_E2_gpio_sleep_init_table[i].direction == GPIO_OUTPUT)
-					value |= (0x1 << bit);
-				else
-					value &= ~(0x1 << bit);
-				__raw_writel(value, GPIO_OE(picasso_E2_gpio_sleep_init_table[i].gpio));
-
-				// out
-				value = __raw_readl(GPIO_OUT(picasso_E2_gpio_sleep_init_table[i].gpio));
-				if (picasso_E2_gpio_sleep_init_table[i].value == GPIO_HIGH)
-					value |= (0x1 << bit);
-				else
-					value &= ~(0x1 << bit);
-				__raw_writel(value, GPIO_OUT(picasso_E2_gpio_sleep_init_table[i].gpio));
 			}
 		}
 		break;

@@ -54,11 +54,7 @@ static int acer_backlight_init(struct device *dev)
 static void acer_backlight_exit(struct device *dev)
 {
 	gpio_set_value(BL_ENABLE, 0);
-	if (acer_board_type == BOARD_PICASSO_E2) {
-		msleep(100);
-	} else {
-		msleep(200);
-	}
+	msleep(200);
 }
 
 static int acer_backlight_notify(struct device *unused, int brightness)
@@ -69,18 +65,8 @@ static int acer_backlight_notify(struct device *unused, int brightness)
 	if (ori_brightness != !!brightness) {
 		if (!ori_brightness){
 			cancel_delayed_work_sync(&bl_en_gpio);
-#if defined(CONFIG_MACH_PICASSO_E2)
-			schedule_delayed_work(&bl_en_gpio,msecs_to_jiffies(150));
-#else
 			schedule_delayed_work(&bl_en_gpio,msecs_to_jiffies(220));
-#endif
 		}
-#if defined(CONFIG_MACH_PICASSO_E2)
-		if (ori_brightness){
-			cancel_delayed_work_sync(&bl_en_gpio);
-			gpio_set_value(BL_ENABLE, 0);
-		}
-#endif
 	}
 
 	ori_brightness = !!brightness;
@@ -629,7 +615,7 @@ int __init acer_panel_init(void)
 			ARRAY_SIZE(acer_gfx_devices));
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_DC)
-	if ((acer_board_type == BOARD_PICASSO_M) || (acer_board_type == BOARD_PICASSO_E2)) {
+	if (acer_board_type == BOARD_PICASSO_M) {
 		res = nvhost_get_resource_byname(&acer_pm_disp1_device,
 				IORESOURCE_MEM, "fbmem");
 	}else{
@@ -646,7 +632,7 @@ int __init acer_panel_init(void)
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_DC)
 	if(!err){
-		if ((acer_board_type == BOARD_PICASSO_M) || (acer_board_type == BOARD_PICASSO_E2)) {
+		if (acer_board_type == BOARD_PICASSO_M) {
 			err = nvhost_device_register(&acer_pm_disp1_device);
 		}else{
 			err = nvhost_device_register(&acer_p2_disp1_device);

@@ -66,9 +66,6 @@
 #ifdef CONFIG_SIMDETECT
 #include <linux/switch.h>
 #endif
-#if defined(CONFIG_MACH_PICASSO_E2)
-#include <linux/input/ft5816_i2c_ts.h>
-#endif
 
 #include "board.h"
 #include "clock.h"
@@ -422,11 +419,7 @@ static struct tegra_i2c_platform_data cardhu_i2c4_platform_data = {
 static struct tegra_i2c_platform_data cardhu_i2c5_platform_data = {
 	.adapter_nr	= 4,
 	.bus_count	= 1,
-#if defined(CONFIG_MACH_PICASSO_E2)
-	.bus_clk_rate	= { 400000, 0 },
-#else
 	.bus_clk_rate	= { 100000, 0 },
-#endif
 	.scl_gpio		= {TEGRA_GPIO_PZ6, 0},
 	.sda_gpio		= {TEGRA_GPIO_PZ7, 0},
 	.arb_recovery = arb_lost_recovery,
@@ -852,15 +845,6 @@ static struct platform_device *cardhu_devices[] __initdata = {
 #endif
 };
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-static struct i2c_board_info __initdata ft5816_i2c_info[] = {
-	{
-		I2C_BOARD_INFO(FT5816_NAME, I2C_CTPM_ADDRESS),
-		.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PJ0),
-	},
-};
-#endif
-
 #if defined(CONFIG_TOUCHSCREEN_ATMEL_MXT1386E)
 static struct i2c_board_info __initdata atmel_i2c_info[] = {
 	{
@@ -901,12 +885,7 @@ static int __init acer_touch_init(void)
 	msleep(2);
 	gpio_set_value(TEGRA_GPIO_PI2, 1);
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-	pr_info("[Touch] before register\n");
-	i2c_register_board_info(1, ft5816_i2c_info, 1);
-#else
 	i2c_register_board_info(1, atmel_i2c_info, 1);
-#endif
 
 	return 0;
 
@@ -999,11 +978,7 @@ static struct tegra_usb_platform_data tegra_ehci1_utmi_pdata = {
 	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
 	.op_mode = TEGRA_USB_OPMODE_HOST,
 	.u_data.host = {
-#if defined(CONFIG_MACH_PICASSO_E2)
-		.vbus_gpio = -1,
-#else
 		.vbus_gpio = TEGRA_GPIO_PN1,
-#endif
 		.vbus_reg = NULL,
 		.hot_plug = true,
 		.remote_wakeup_supported = false,
@@ -1046,33 +1021,6 @@ static struct tegra_usb_platform_data tegra_ehci2_utmi_pdata = {
 	},
 };
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-static struct tegra_usb_platform_data tegra_ehci3_utmi_pdata = {
-	.port_otg = false,
-	.has_hostpc = true,
-	.phy_intf = TEGRA_USB_PHY_INTF_UTMI,
-	.op_mode = TEGRA_USB_OPMODE_HOST,
-	.u_data.host = {
-		.vbus_gpio = -1,
-		.vbus_reg = NULL,
-		.hot_plug = true,
-		.remote_wakeup_supported = false,
-		.power_off_on_suspend = true,
-	},
-	.u_cfg.utmi = {
-		.hssync_start_delay = 0,
-		.elastic_limit = 16,
-		.idle_wait_delay = 17,
-		.term_range_adj = 6,
-		.xcvr_setup = 8,
-		.xcvr_lsfslew = 2,
-		.xcvr_lsrslew = 2,
-		.xcvr_setup_offset = 0,
-		.xcvr_use_fuses = 1,
-	},
-};
-#endif
-
 static struct tegra_usb_otg_data tegra_otg_pdata = {
 	.ehci_device = &tegra_ehci1_device,
 	.ehci_pdata = &tegra_ehci1_utmi_pdata,
@@ -1098,10 +1046,6 @@ static void cardhu_usb_init(void)
 		platform_device_register(&tegra_ehci2_device);
 	}
 
-#if defined(CONFIG_MACH_PICASSO_E2)
-	tegra_ehci3_device.dev.platform_data = &tegra_ehci3_utmi_pdata;
-	platform_device_register(&tegra_ehci3_device);
-#endif
 }
 #else
 static void cardhu_usb_init(void) { }
@@ -1182,8 +1126,6 @@ static void acer_board_info(void) {
 		pr_info("Board Type: Picasso M\n");
 	else if (acer_board_type == BOARD_PICASSO_MF)
 		pr_info("Board Type: Picasso MF\n");
-	else if (acer_board_type == BOARD_PICASSO_E2)
-		pr_info("Board Type: Picasso E2\n");
 	else
 		pr_info("Board Type: not support (%d)\n", acer_board_type);
 
@@ -1296,16 +1238,6 @@ static void __init tegra_cardhu_reserve(void)
 	tegra_ram_console_debug_reserve(SZ_1M);
 }
 
-MACHINE_START(PICASSO2, "picasso2")
-	.boot_params    = 0x80000100,
-	.map_io         = tegra_map_common_io,
-	.reserve        = tegra_cardhu_reserve,
-	.init_early	= tegra_init_early,
-	.init_irq       = tegra_init_irq,
-	.timer          = &tegra_timer,
-	.init_machine   = tegra_cardhu_init,
-MACHINE_END
-
 MACHINE_START(PICASSO_M, "picasso_m")
 	.boot_params    = 0x80000100,
 	.map_io         = tegra_map_common_io,
@@ -1317,16 +1249,6 @@ MACHINE_START(PICASSO_M, "picasso_m")
 MACHINE_END
 
 MACHINE_START(PICASSO_MF, "picasso_mf")
-	.boot_params    = 0x80000100,
-	.map_io         = tegra_map_common_io,
-	.reserve        = tegra_cardhu_reserve,
-	.init_early	= tegra_init_early,
-	.init_irq       = tegra_init_irq,
-	.timer          = &tegra_timer,
-	.init_machine   = tegra_cardhu_init,
-MACHINE_END
-
-MACHINE_START(PICASSO_E2, "picasso_e2")
 	.boot_params    = 0x80000100,
 	.map_io         = tegra_map_common_io,
 	.reserve        = tegra_cardhu_reserve,
