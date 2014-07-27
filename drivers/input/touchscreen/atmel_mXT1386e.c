@@ -1508,14 +1508,6 @@ static int ATMEL_WriteConfig(struct mxt_data *mxt)
 	if (acer_board_type == BOARD_PICASSO_M) {
 		if (mxt_write_block(mxt->client, T46_OBJAddr,  9, T46OBJ) < 0)
 			return -1;
-	} else if (acer_board_type == BOARD_PICASSO_2) {
-		if (acer_board_id == BOARD_DVT1) {
-			if (mxt_write_block(mxt->client, T46_OBJAddr,  9, T46OBJ_0) < 0)
-				return -1;
-		} else {
-			if (mxt_write_block(mxt->client, T46_OBJAddr,  9, T46OBJ) < 0)
-				return -1;
-		}
 	} else {
 		if (mxt_write_block(mxt->client, T46_OBJAddr,  9, T46OBJ) < 0)
 			return -1;

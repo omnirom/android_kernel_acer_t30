@@ -23,7 +23,6 @@
 #include <linux/resource.h>
 #include <linux/regulator/machine.h>
 #include <linux/mfd/tps6591x.h>
-#include <linux/mfd/max77663-core.h>
 #include <linux/gpio.h>
 #include <linux/io.h>
 #include <linux/regulator/fixed.h>

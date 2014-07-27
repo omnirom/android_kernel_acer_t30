@@ -98,7 +98,6 @@ extern int acer_board_id;
 extern int acer_sku;
 extern int acer_wifi_module;
 
-static void bt_shutdown_pin_init(void);
 void gpio_unused_init(void);
 
 static struct balanced_throttle throttle_list[] = {
@@ -284,22 +283,11 @@ static struct platform_device cardhu_bcm4329_rfkill_device = {
 static noinline void __init cardhu_bcm4329_bt_rfkill(void)
 {
 	disable_bt_uart_func();
-	bt_shutdown_pin_init();
 	return;
 }
 #else
 static inline void cardhu_bcm4329_bt_rfkill(void) { }
 #endif
-
-static void bt_shutdown_pin_init(void) {
-        if(acer_board_type == BOARD_PICASSO_2) {
-            if(acer_board_id == BOARD_DVT1) {
-                cardhu_bcm4329_rfkill_device.resource[0].start = TEGRA_GPIO_PS3;
-                cardhu_bcm4329_rfkill_device.resource[0].end   = TEGRA_GPIO_PS3;
-                pr_info("bt_shutdown_pin_init: TEGRA_GPIO_PS3\n");
-            }
-        }
-}
 
 static struct resource cardhu_bluesleep_resources[] = {
 	[0] = {
@@ -653,7 +641,7 @@ static void __init cardhu_uart_init(void)
 				ARRAY_SIZE(cardhu_uart_devices));
 }
 
-#if defined(CONFIG_ACER_VIBRATOR)
+#ifdef CONFIG_ACER_VIBRATOR
 static struct timed_gpio vib_timed_gpios[] = {
 	{
 		.name = "vibrator",
@@ -1120,9 +1108,10 @@ static void simdet_init(void)
 #endif
 
 static void acer_board_info(void) {
-	if (acer_board_type == BOARD_PICASSO_2)
-		pr_info("Board Type: Picasso 2\n");
-	else if (acer_board_type == BOARD_PICASSO_M)
+	struct board_info board_info;
+	tegra_get_board_info(&board_info);
+	
+	if (acer_board_type == BOARD_PICASSO_M)
 		pr_info("Board Type: Picasso M\n");
 	else if (acer_board_type == BOARD_PICASSO_MF)
 		pr_info("Board Type: Picasso MF\n");
@@ -1172,6 +1161,8 @@ static void acer_board_info(void) {
 		pr_info("Wifi module: AH663");
 	else if (acer_wifi_module == BOARD_WIFI_NH660)
 		pr_info("Wifi module: NH660");
+	
+	pr_info("board_info.board_id = %d", board_info.board_id);
 }
 
 extern void tegra_booting_info(void);

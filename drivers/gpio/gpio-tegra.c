@@ -39,8 +39,6 @@
 #if defined(CONFIG_ARCH_ACER_T30)
 #include "../../../arch/arm/mach-tegra/gpio-names.h"
 #include "../../../arch/arm/mach-tegra/board-acer-t30.h"
-extern int acer_board_id;
-extern int acer_board_type;
 #endif
 
 #define GPIO_BANK(x)		((x) >> 5)
@@ -968,29 +966,22 @@ void gpio_unused_init(void)
 	unsigned long flags;
 
 	local_irq_save(flags);
-	switch(acer_board_type) {
-	case BOARD_PICASSO_2:
-	case BOARD_PICASSO_M:
-	case BOARD_PICASSO_MF:
-		for (i = 0; i < ARRAY_SIZE(gpio_unused_init_table); i++) {
-			if (gpio_unused_init_table[i].enabled) {
-				gpio_request(gpio_unused_init_table[i].gpio, gpio_unused_init_table[i].name);
-				if (gpio_unused_init_table[i].direction == GPIO_OUTPUT) {
-					ret = gpio_direction_output(gpio_unused_init_table[i].gpio, gpio_unused_init_table[i].value);
-					if(ret)
-						pr_err("---%s:  GPIO(%d)  init error\n", __func__, gpio_unused_init_table[i].gpio);
-					else
-						tegra_gpio_enable(gpio_unused_init_table[i].gpio);
-				}
-				else if (gpio_unused_init_table[i].direction == GPIO_INPUT) {
-					gpio_direction_input(gpio_unused_init_table[i].gpio);
-					tegra_gpio_enable(gpio_unused_init_table[i].gpio);
-				}
+
+	for (i = 0; i < ARRAY_SIZE(gpio_unused_init_table); i++) {
+		if (gpio_unused_init_table[i].enabled) {
+			gpio_request(gpio_unused_init_table[i].gpio, gpio_unused_init_table[i].name);
+			if (gpio_unused_init_table[i].direction == GPIO_OUTPUT) {
+				ret = gpio_direction_output(gpio_unused_init_table[i].gpio, gpio_unused_init_table[i].value);
+				if(ret)
+					pr_err("---%s:  GPIO(%d)  init error\n", __func__, gpio_unused_init_table[i].gpio);
 				else
-					pr_err("%s : GPIO neither output nor input \n", __func__);
-			}
+					tegra_gpio_enable(gpio_unused_init_table[i].gpio);
+			} else if (gpio_unused_init_table[i].direction == GPIO_INPUT) {
+				gpio_direction_input(gpio_unused_init_table[i].gpio);
+				tegra_gpio_enable(gpio_unused_init_table[i].gpio);
+			} else
+				pr_err("%s : GPIO neither output nor input \n", __func__);
 		}
-		break;
 	}
 
 	if (acer_sku == BOARD_SKU_WIFI) { // Wifi
@@ -1003,17 +994,14 @@ void gpio_unused_init(void)
 						pr_err("---%s:  GPIO(%d)  init error\n", __func__, gpio_wifi_sku_table[i].gpio);
 					else
 						tegra_gpio_enable(gpio_wifi_sku_table[i].gpio);
-				}
-				else if (gpio_wifi_sku_table[i].direction == GPIO_INPUT) {
+				} else if (gpio_wifi_sku_table[i].direction == GPIO_INPUT) {
 					gpio_direction_input(gpio_wifi_sku_table[i].gpio);
 					tegra_gpio_enable(gpio_wifi_sku_table[i].gpio);
-				}
-				else
+				} else
 					pr_err("%s : GPIO neither output nor input \n", __func__);
 			}
 		}
-	}
-	else {  // 3G/LTE
+	} else {  // 3G/LTE
 		for (i = 0; i < ARRAY_SIZE(gpio_3G_sku_table); i++) {
 			if (gpio_3G_sku_table[i].enabled) {
 				gpio_request(gpio_3G_sku_table[i].gpio, gpio_3G_sku_table[i].name);
@@ -1023,12 +1011,10 @@ void gpio_unused_init(void)
 						pr_err("---%s:  GPIO(%d)  init error\n", __func__, gpio_3G_sku_table[i].gpio);
 					else
 						tegra_gpio_enable(gpio_3G_sku_table[i].gpio);
-				}
-				else if (gpio_3G_sku_table[i].direction == GPIO_INPUT) {
+				} else if (gpio_3G_sku_table[i].direction == GPIO_INPUT) {
 					gpio_direction_input(gpio_3G_sku_table[i].gpio);
 					tegra_gpio_enable(gpio_3G_sku_table[i].gpio);
-				}
-				else
+				} else
 					pr_err("%s : GPIO neither output nor input \n", __func__);
 			}
 		}
@@ -1044,41 +1030,32 @@ void gpio_sleep_init(void)
 	unsigned long flags;
 
 	local_irq_save(flags);
-	switch(acer_board_type) {
-	case BOARD_PICASSO_2:
-	case BOARD_PICASSO_M:
-	case BOARD_PICASSO_MF:
-		for (i = 0 ; i < ARRAY_SIZE(gpio_sleep_init_table); i++) {
-			if (gpio_sleep_init_table[i].enabled) {
 
-				// get gpio index
-				banks_idx = (gpio_sleep_init_table[i].gpio >> 5) & BANK_MASK;
-				banks_oe_idx = (gpio_sleep_init_table[i].gpio >> 3) & OE_MASK;
-				bit = gpio_sleep_init_table[i].gpio & GPIOBIT_MASK;
-
-				// cnf
-				value = __raw_readl(GPIO_CNF(gpio_sleep_init_table[i].gpio));
+	for (i = 0 ; i < ARRAY_SIZE(gpio_sleep_init_table); i++) {
+		if (gpio_sleep_init_table[i].enabled) {
+			// get gpio index
+			banks_idx = (gpio_sleep_init_table[i].gpio >> 5) & BANK_MASK;
+			banks_oe_idx = (gpio_sleep_init_table[i].gpio >> 3) & OE_MASK;
+			bit = gpio_sleep_init_table[i].gpio & GPIOBIT_MASK;
+			// cnf
+			value = __raw_readl(GPIO_CNF(gpio_sleep_init_table[i].gpio));
+			value |= (0x1 << bit);
+			__raw_writel(value, GPIO_CNF(gpio_sleep_init_table[i].gpio));
+			// oe
+			value = __raw_readl(GPIO_OE(gpio_sleep_init_table[i].gpio));
+			if (gpio_sleep_init_table[i].direction == GPIO_OUTPUT)
 				value |= (0x1 << bit);
-				__raw_writel(value, GPIO_CNF(gpio_sleep_init_table[i].gpio));
-
-				// oe
-				value = __raw_readl(GPIO_OE(gpio_sleep_init_table[i].gpio));
-				if (gpio_sleep_init_table[i].direction == GPIO_OUTPUT)
-					value |= (0x1 << bit);
-				else
-					value &= ~(0x1 << bit);
-				__raw_writel(value, GPIO_OE(gpio_sleep_init_table[i].gpio));
-
-				// out
-				value = __raw_readl(GPIO_OUT(gpio_sleep_init_table[i].gpio));
-				if (gpio_sleep_init_table[i].value == GPIO_HIGH)
-					value |= (0x1 << bit);
-				else
-					value &= ~(0x1 << bit);
-				__raw_writel(value, GPIO_OUT(gpio_sleep_init_table[i].gpio));
-			}
+			else
+				value &= ~(0x1 << bit);
+			__raw_writel(value, GPIO_OE(gpio_sleep_init_table[i].gpio));
+			// out
+			value = __raw_readl(GPIO_OUT(gpio_sleep_init_table[i].gpio));
+			if (gpio_sleep_init_table[i].value == GPIO_HIGH)
+				value |= (0x1 << bit);
+			else
+				value &= ~(0x1 << bit);
+			__raw_writel(value, GPIO_OUT(gpio_sleep_init_table[i].gpio));
 		}
-		break;
 	}
 	local_irq_restore(flags);
 }

@@ -26,7 +26,6 @@
 #include <linux/gpio.h>
 #include <linux/gpio_keys.h>
 #include <linux/mfd/tps6591x.h>
-#include <linux/mfd/max77663-core.h>
 #include <linux/interrupt_keys.h>
 #include <linux/gpio_scrollwheel.h>
 

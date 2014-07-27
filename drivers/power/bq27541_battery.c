@@ -39,12 +39,11 @@
 #include <linux/wakelock.h>
 #include <linux/mutex.h>
 #include "../../arch/arm/mach-tegra/gpio-names.h"
-#if defined(CONFIG_ARCH_ACER_T30)
+
 #include "../../arch/arm/mach-tegra/board-acer-t30.h"
 extern int acer_board_id;
 extern int acer_board_type;
 extern bool throttle_start;
-#endif
 
 #define RELEASED_DATE			"2012/08/28"
 #define DRIVER_VERSION			"1.7.0"
@@ -1644,12 +1643,10 @@ static int bq27541_battery_probe(struct i2c_client *client,
 	wake_lock_init(&ac_wake_lock, WAKE_LOCK_SUSPEND, "t30-ac");
 	dev_info(&client->dev, "support ver. %s enabled (%s)\n", DRIVER_VERSION, RELEASED_DATE);
 
-#if defined(CONFIG_ARCH_ACER_T30)
-	if ( (acer_board_type == BOARD_PICASSO_2 || acer_board_type == BOARD_PICASSO_M )
-		&& (acer_board_id == BOARD_EVT || acer_board_id == BOARD_DVT1 || acer_board_id == BOARD_DVT2)) {
+	if (acer_board_type == BOARD_PICASSO_M &&
+		(acer_board_id == BOARD_EVT || acer_board_id == BOARD_DVT1 || acer_board_id == BOARD_DVT2)) {
 		bq27541_disable_hibernate();
 	}
-#endif
 
 	return 0;
 

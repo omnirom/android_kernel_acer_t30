@@ -38,7 +38,6 @@
 #include <mach/fb.h>
 #include <mach/gpio.h>
 #include <media/ov5650.h>
-#include <media/ov14810.h>
 #include <media/ov2710.h>
 #include <media/tps61050.h>
 #include <generated/mach-types.h>
@@ -256,11 +255,6 @@ static const struct i2c_board_info cardhu_camera_i2c3_board_info[] = {
 		.platform_data = &cardhu_mt9d115_data,
 	},
 #endif
-#if defined(CONFIG_TORCH_TPS61050YZGR)
-	{
-		I2C_BOARD_INFO("tps61050", 0x33),
-	},
-#endif
 };
 
 #if !defined(CONFIG_ARCH_ACER_T30)
@@ -412,61 +406,7 @@ struct ov5650_platform_data cardhu_left_ov5650_data = {
 	.power_off = cardhu_left_ov5650_power_off,
 };
 
-#ifdef CONFIG_VIDEO_OV14810
-static int cardhu_ov14810_power_on(void)
-{
-	if (board_info.board_id == BOARD_E1198) {
-		gpio_direction_output(CAM1_POWER_DWN_GPIO, 1);
-		mdelay(20);
-		gpio_direction_output(OV14810_RESETN_GPIO, 0);
-		mdelay(100);
-		gpio_direction_output(OV14810_RESETN_GPIO, 1);
-	}
 
-	return 0;
-}
-
-static int cardhu_ov14810_power_off(void)
-{
-	if (board_info.board_id == BOARD_E1198) {
-		gpio_direction_output(CAM1_POWER_DWN_GPIO, 1);
-		gpio_direction_output(CAM2_POWER_DWN_GPIO, 1);
-		gpio_direction_output(CAM3_POWER_DWN_GPIO, 1);
-	}
-
-	return 0;
-}
-
-struct ov14810_platform_data cardhu_ov14810_data = {
-	.power_on = cardhu_ov14810_power_on,
-	.power_off = cardhu_ov14810_power_off,
-};
-
-struct ov14810_platform_data cardhu_ov14810uC_data = {
-	.power_on = NULL,
-	.power_off = NULL,
-};
-
-struct ov14810_platform_data cardhu_ov14810SlaveDev_data = {
-	.power_on = NULL,
-	.power_off = NULL,
-};
-
-static struct i2c_board_info cardhu_i2c_board_info_e1214[] = {
-	{
-		I2C_BOARD_INFO("ov14810", 0x36),
-		.platform_data = &cardhu_ov14810_data,
-	},
-	{
-		I2C_BOARD_INFO("ov14810uC", 0x67),
-		.platform_data = &cardhu_ov14810uC_data,
-	},
-	{
-		I2C_BOARD_INFO("ov14810SlaveDev", 0x69),
-		.platform_data = &cardhu_ov14810SlaveDev_data,
-	}
-};
-#endif
 
 static int cardhu_right_ov5650_power_on(void)
 {
