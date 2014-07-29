@@ -187,7 +187,7 @@ TPS_PDATA_INIT(ldo6, 0,         1000, 3300, tps6591x_rails(VIO), 0, 0, 0, 1200, 
 TPS_PDATA_INIT(ldo7, 0,         1200, 1200, tps6591x_rails(VIO), 1, 1, 1, -1, 0, 0, EXT_CTRL_SLEEP_OFF, LDO_LOW_POWER_ON_SUSPEND);
 TPS_PDATA_INIT(ldo8, 0,         1000, 3300, tps6591x_rails(VIO), 1, 0, 0, -1, 0, 0, EXT_CTRL_SLEEP_OFF, LDO_LOW_POWER_ON_SUSPEND);
 
-#if defined(CONFIG_RTC_DRV_TPS6591x)
+#ifdef CONFIG_RTC_DRV_TPS6591x
 static struct tps6591x_rtc_platform_data rtc_data = {
 	.irq = TEGRA_NR_IRQS + TPS6591X_INT_RTC_ALARM,
 	.time = {
@@ -227,7 +227,7 @@ static struct tps6591x_subdev_info tps_devs_t30[] = {
 	TPS_REG(LDO_6, ldo6, 0),
 	TPS_REG(LDO_7, ldo7, 0),
 	TPS_REG(LDO_8, ldo8, 0),
-#if defined(CONFIG_RTC_DRV_TPS6591x)
+#ifdef CONFIG_RTC_DRV_TPS6591x
 	TPS_RTC_REG(),
 #endif
 };
@@ -350,8 +350,7 @@ int __init cardhu_regulator_init(void)
 	/* The regulator details have complete constraints */
 	regulator_has_full_constraints();
 
-	if ((board_info.board_id == BOARD_E1291) &&
-		(board_info.sku & SKU_DCDC_TPS62361_SUPPORT))
+	if (board_info.sku & SKU_DCDC_TPS62361_SUPPORT)
 		ext_core_regulator = true;
 
         tps_platform.num_subdevs = ARRAY_SIZE(tps_devs_t30);
@@ -446,7 +445,7 @@ static struct regulator_consumer_supply fixed_reg_en_3v3_sys_supply[] = {
 	REGULATOR_SUPPLY("vdd_3v3_cam", NULL),
 	REGULATOR_SUPPLY("vdd_3v3_als", NULL),
 	REGULATOR_SUPPLY("debug_cons", NULL),
-        REGULATOR_SUPPLY("vdd_nct1008", NULL),
+	REGULATOR_SUPPLY("vdd_nct1008", NULL),
 	REGULATOR_SUPPLY("vdd", "4-004c"),
 };
 

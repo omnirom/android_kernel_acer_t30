@@ -33,7 +33,6 @@ static struct regulator *acer_hdmi_reg = NULL;
 static struct regulator *acer_hdmi_pll = NULL;
 
 static atomic_t sd_brightness = ATOMIC_INIT(255);
-static struct board_info board_info;
 static struct delayed_work bl_en_gpio;
 
 extern int acer_board_type;
@@ -63,7 +62,7 @@ static int acer_backlight_notify(struct device *unused, int brightness)
 	static int ori_brightness = 0;
 
 	if (ori_brightness != !!brightness) {
-		if (!ori_brightness){
+		if (!ori_brightness) {
 			cancel_delayed_work_sync(&bl_en_gpio);
 			schedule_delayed_work(&bl_en_gpio,msecs_to_jiffies(220));
 		}
@@ -78,7 +77,7 @@ static int acer_backlight_notify(struct device *unused, int brightness)
 	}
 
 	if (brightness > 255) {
-		pr_err("[PANEL]Error: Brightness > 255!\n");
+		pr_err("[PANEL] Error: Brightness > 255!\n");
 	}
 
 	return brightness;
@@ -105,16 +104,16 @@ static struct platform_device acer_backlight_device = {
 
 static int acer_panel_enable(void)
 {
-	gpio_set_value(LCD_VDD,1);
+	gpio_set_value(LCD_VDD, 1);
 	udelay(400);
-	gpio_set_value(LVDS_SHUTDOWN,1);
+	gpio_set_value(LVDS_SHUTDOWN, 1);
 	msleep(10);
 	return 0;
 }
 
 static int acer_panel_disable(void)
 {
-#if defined(CONFIG_MACH_PICASSO_MF)
+#ifdef CONFIG_MACH_PICASSO_MF
 	gpio_set_value(BL_ENABLE, 0);
 	msleep(210);
 #endif
@@ -567,9 +566,7 @@ static void acer_panel_late_resume(struct early_suspend *h)
 int __init acer_panel_init(void)
 {
 	int err;
-	struct resource *res;
-
-	tegra_get_board_info(&board_info);
+	struct resource __maybe_unused *res;
 
 	acer_carveouts[1].base = tegra_carveout_start;
 	acer_carveouts[1].size = tegra_carveout_size;
@@ -618,7 +615,7 @@ int __init acer_panel_init(void)
 	if (acer_board_type == BOARD_PICASSO_M) {
 		res = nvhost_get_resource_byname(&acer_pm_disp1_device,
 				IORESOURCE_MEM, "fbmem");
-	}else{
+	} else {
 		res = nvhost_get_resource_byname(&acer_p2_disp1_device,
 				IORESOURCE_MEM, "fbmem");
 	}
@@ -631,10 +628,10 @@ int __init acer_panel_init(void)
 				min(tegra_fb_size, tegra_bootloader_fb_size));
 
 #if defined(CONFIG_TEGRA_GRHOST) && defined(CONFIG_TEGRA_DC)
-	if(!err){
+	if (!err) {
 		if (acer_board_type == BOARD_PICASSO_M) {
 			err = nvhost_device_register(&acer_pm_disp1_device);
-		}else{
+		} else {
 			err = nvhost_device_register(&acer_p2_disp1_device);
 		}
 	}

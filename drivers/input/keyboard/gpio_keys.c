@@ -376,9 +376,6 @@ static void gpio_keys_gpio_timer(unsigned long _data)
 static irqreturn_t gpio_keys_gpio_isr(int irq, void *dev_id)
 {
 	struct gpio_button_data *bdata = dev_id;
-#if defined(CONFIG_ARCH_ACER_T30)
-	struct gpio_keys_button *button = bdata->button;
-#endif
 
 	BUG_ON(irq != bdata->irq);
 

@@ -25,19 +25,7 @@
 #include <mach/irqs.h>
 #include <linux/mfd/tps6591x.h>
 
-/* Processor Board  ID */
-#define BOARD_E1187   0x0B57
-#define BOARD_E1186   0x0B56
-#define BOARD_E1198   0x0B62
-#define BOARD_E1256   0x0C38
-#define BOARD_E1257   0x0C39
-#define BOARD_E1291   0x0C5B
-#define BOARD_PM269   0x0245
-#define BOARD_PM305   0x0305
-#define BOARD_PM311   0x030B
-
 #define SKU_DCDC_TPS62361_SUPPORT	0x1
-#define SKU_SLT_ULPI_SUPPORT		0x2
 
 /* External peripheral act as gpio */
 /* TPS6591x GPIOs */
@@ -72,13 +60,6 @@
 #define G_ACC_INT			TEGRA_GPIO_PS5
 #define COMPASS_DRDY			TEGRA_GPIO_PX7
 
-/* CAMERA RELATED GPIOs on CARDHU */
-#define OV5650_RESETN_GPIO			TEGRA_GPIO_PBB0
-#define CAM1_POWER_DWN_GPIO			TEGRA_GPIO_PBB5
-#define CAM2_POWER_DWN_GPIO			TEGRA_GPIO_PBB6
-#define CAM3_POWER_DWN_GPIO			TEGRA_GPIO_PBB7
-#define CAMERA_CSI_MUX_SEL_GPIO		TEGRA_GPIO_PCC1
-
 #define AC_PRESENT_GPIO		TPS6591X_GPIO_4
 
 /*****************Interrupt tables ******************/
@@ -97,7 +78,6 @@ int cardhu_sensors_init(void);
 int cardhu_kbc_init(void);
 int cardhu_scroll_init(void);
 int cardhu_keys_init(void);
-int cardhu_pins_state_init(void);
 int cardhu_emc_init(void);
 int cardhu_edp_init(void);
 int acer_keys_init(void);
@@ -106,8 +86,6 @@ int cardhu_pm298_gpio_switch_regulator_init(void);
 int cardhu_pm298_regulator_init(void);
 int cardhu_pm299_gpio_switch_regulator_init(void);
 int cardhu_pm299_regulator_init(void);
-
-#define MPU_TYPE_MPU3050	1
 
 #define TDIODE_OFFSET	(10000)	/* in millicelsius */
 

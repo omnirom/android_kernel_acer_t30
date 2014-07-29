@@ -119,7 +119,7 @@ static struct tegra_sdhci_hw_ops tegra_3x_sdhci_ops = {
 };
 #endif
 
-#if !defined(CONFIG_ARCH_ACER_T30)
+#ifndef CONFIG_ARCH_ACER_T30
 struct tegra_sdhci_host {
 	bool	clk_enabled;
 	struct regulator *vdd_io_reg;
@@ -1183,7 +1183,7 @@ static int __devinit sdhci_tegra_probe(struct platform_device *pdev)
 			tegra_host->vddio_min_uv = SDHOST_HIGH_VOLT_MIN;
 			tegra_host->vddio_max_uv = SDHOST_HIGH_VOLT_MAX;
 		}
-		tegra_host->vdd_io_reg = regulator_get(mmc_dev(host->mmc), plat->vdd_rail_name);
+		tegra_host->vdd_io_reg = regulator_get(mmc_dev(host->mmc), "vddio_sdmmc1");
 		if (IS_ERR_OR_NULL(tegra_host->vdd_io_reg)) {
 			dev_info(mmc_dev(host->mmc), "%s regulator not found: %ld."
 				"Assuming vddio_sdmmc1 is not required.\n",
@@ -1199,7 +1199,7 @@ static int __devinit sdhci_tegra_probe(struct platform_device *pdev)
 			}
 		}
 
-		tegra_host->vdd_slot_reg = regulator_get(mmc_dev(host->mmc), plat->slot_rail_name);
+		tegra_host->vdd_slot_reg = regulator_get(mmc_dev(host->mmc), "vddio_sd_slot");
 		if (IS_ERR_OR_NULL(tegra_host->vdd_slot_reg)) {
 			dev_info(mmc_dev(host->mmc), "%s regulator not found: %ld."
 				" Assuming vddio_sd_slot is not required.\n",

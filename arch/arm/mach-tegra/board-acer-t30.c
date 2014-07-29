@@ -76,11 +76,11 @@
 #include "pm.h"
 #include "wdt-recovery.h"
 
-#if defined(CONFIG_ACER_VIBRATOR)
+#ifdef CONFIG_ACER_VIBRATOR
 #include "../../../drivers/staging/android/timed_output.h"
 #include "../../../drivers/staging/android/timed_gpio.h"
 
-#if defined(CONFIG_ACER_LEDS)
+#ifdef CONFIG_ACER_LEDS
 #include <linux/leds-gpio-p2.h>
 #endif
 
@@ -89,7 +89,7 @@
 
 #define DOCK_DEBUG_UART_GPIO TEGRA_GPIO_PU5
 
-#if defined(CONFIG_ACER_ES305)
+#ifdef CONFIG_ACER_ES305
 #include "../../../sound/soc/tegra/acer_a1026.h"
 #endif
 
@@ -442,7 +442,7 @@ static struct i2c_board_info __initdata cardhu_codec_wm8903_info = {
 	.platform_data = &cardhu_wm8903_pdata,
 };
 
-#if defined(CONFIG_ACER_ES305)
+#ifdef CONFIG_ACER_ES305
 static struct a1026_platform_data a1026_pdata = {
 	.gpio_a1026_clk = TEGRA_GPIO_PX0,
 	.gpio_a1026_reset = TEGRA_GPIO_PN0,
@@ -500,25 +500,11 @@ static struct tegra_uart_platform_data cardhu_loopback_uart_pdata;
 
 static void __init uart_debug_init(void)
 {
-	struct board_info board_info;
 	int debug_port_id;
-
-	tegra_get_board_info(&board_info);
 
 	debug_port_id = get_tegra_uart_debug_port_id();
 	if (debug_port_id < 0) {
 		debug_port_id = 0;
-			/* UARTB is debug port
-			 *       for SLT - E1186/E1187/PM269
-			 *       for E1256/E1257
-			 */
-		if (((board_info.sku & SKU_SLT_ULPI_SUPPORT) &&
-			((board_info.board_id == BOARD_E1186) ||
-			(board_info.board_id == BOARD_E1187) ||
-			(board_info.board_id == BOARD_PM269))) ||
-			(board_info.board_id == BOARD_E1256) ||
-			(board_info.board_id == BOARD_E1257))
-				debug_port_id = 1;
 	}
 
 	switch (debug_port_id) {
@@ -588,8 +574,7 @@ static void __init cardhu_uart_init(void)
 	if (ret < 0) {
 		pr_err("%s: gpio_request failed for gpio %d\n",
 					__func__, DOCK_DEBUG_UART_GPIO);
-	}
-	else {
+	} else {
 		gpio_direction_input(DOCK_DEBUG_UART_GPIO);
 	}
 
@@ -709,10 +694,6 @@ static void __init cardhu_spi_init(void)
 {
 	int i;
 	struct clk *c;
-	struct board_info board_info, display_board_info;
-
-	tegra_get_board_info(&board_info);
-	tegra_get_display_board_info(&display_board_info);
 
 	for (i = 0; i < ARRAY_SIZE(spi_parent_clk); ++i) {
 		c = tegra_get_clock_by_name(spi_parent_clk[i].name);
@@ -729,13 +710,6 @@ static void __init cardhu_spi_init(void)
 	tegra_spi_device4.dev.platform_data = &cardhu_spi_pdata;
 	platform_add_devices(cardhu_spi_devices,
 				ARRAY_SIZE(cardhu_spi_devices));
-
-	if (board_info.board_id == BOARD_E1198) {
-		tegra_spi_device2.dev.platform_data = &cardhu_spi_pdata;
-		platform_device_register(&tegra_spi_device2);
-		tegra_spi_slave_device1.dev.platform_data = &cardhu_spi_pdata;
-		platform_device_register(&tegra_spi_slave_device1);
-	}
 }
 
 static struct resource tegra_rtc_resources[] = {
@@ -796,20 +770,20 @@ static struct platform_device *cardhu_devices[] __initdata = {
 #if defined(CONFIG_TEGRA_IOVMM_SMMU) ||  defined(CONFIG_TEGRA_IOMMU_SMMU)
 	&tegra_smmu_device,
 #endif
-#if defined(CONFIG_ACER_VIBRATOR)
+#ifdef CONFIG_ACER_VIBRATOR
 	&vib_timed_gpio_device,
 #endif
 	&tegra_wdt0_device,
 	&tegra_wdt1_device,
 	&tegra_wdt2_device,
-#if defined(CONFIG_TEGRA_AVP)
+#ifdef CONFIG_TEGRA_AVP
 	&tegra_avp_device,
 #endif
 	&tegra_camera,
 #ifdef CONFIG_ROTATELOCK
 	&rotationlock_switch,
 #endif
-#if defined(CONFIG_CRYPTO_DEV_TEGRA_SE)
+#ifdef CONFIG_CRYPTO_DEV_TEGRA_SE
 	&tegra_se_device,
 #endif
 	&tegra_ahub_device,
@@ -828,12 +802,12 @@ static struct platform_device *cardhu_devices[] __initdata = {
 	&cardhu_audio_wm8903_device,
 	&tegra_hda_device,
 	&tegra_cec_device,
-#if defined(CONFIG_CRYPTO_DEV_TEGRA_AES)
+#ifdef CONFIG_CRYPTO_DEV_TEGRA_AES
 	&tegra_aes_device,
 #endif
 };
 
-#if defined(CONFIG_TOUCHSCREEN_ATMEL_MXT1386E)
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_MXT1386E
 static struct i2c_board_info __initdata atmel_i2c_info[] = {
 	{
 		I2C_BOARD_INFO("maXTouch", 0X4C),
@@ -935,7 +909,7 @@ void hsic_power_off(void)
 	}
 }
 
-#if defined(CONFIG_USB_SUPPORT)
+#ifdef CONFIG_USB_SUPPORT
 static struct tegra_usb_platform_data tegra_udc_pdata = {
 	.port_otg = true,
 	.has_hostpc = true,
@@ -1013,15 +987,9 @@ static struct tegra_usb_otg_data tegra_otg_pdata = {
 	.ehci_device = &tegra_ehci1_device,
 	.ehci_pdata = &tegra_ehci1_utmi_pdata,
 };
-#endif
 
-#if defined(CONFIG_USB_SUPPORT)
 static void cardhu_usb_init(void)
 {
-	struct board_info bi;
-
-	tegra_get_board_info(&bi);
-
 	/* OTG should be the first to be registered */
 	tegra_otg_device.dev.platform_data = &tegra_otg_pdata;
 	platform_device_register(&tegra_otg_device);
@@ -1029,7 +997,7 @@ static void cardhu_usb_init(void)
 	/* setup the udc platform data */
 	tegra_udc_device.dev.platform_data = &tegra_udc_pdata;
 
-	if ( acer_sku != BOARD_SKU_WIFI ) {
+	if (acer_sku != BOARD_SKU_WIFI) {
 		tegra_ehci2_device.dev.platform_data = &tegra_ehci2_utmi_pdata;
 		platform_device_register(&tegra_ehci2_device);
 	}
@@ -1042,14 +1010,27 @@ static void cardhu_usb_init(void) { }
 static void cardhu_gps_init(void)
 {
 	int rc;
-        pr_err("------------------------cardhu_gps_init start-----------------------\n");
+	
+	pr_info("------------------------cardhu_gps_uart_init start-----------------------\n");
+	tegra_gpio_disable(TEGRA_GPIO_PC3);//RX
+	tegra_gpio_disable(TEGRA_GPIO_PC2);//TX
+	tegra_gpio_disable(TEGRA_GPIO_PJ5);//CTS
+	tegra_gpio_disable(TEGRA_GPIO_PJ6);//RTS
+	pr_info("------------------------cardhu_gps_uart_init end-----------------------\n");
+	
+	pr_info("------------------------cardhu_gps_init start-----------------------\n");
 	rc = gpio_request(TEGRA_GPIO_PY2, "EN_VDD_GPS");
-	if (rc)
+	if (rc) {
 		pr_err("EN_VDD_GPS request failed:%d\n", rc);
+	}
+
+	tegra_gpio_enable(TEGRA_GPIO_PU2);
+	tegra_gpio_enable(TEGRA_GPIO_PU3);
 	rc = gpio_direction_output(TEGRA_GPIO_PY2, 1);
-	if (rc)
+	if (rc) {
 		pr_err("EN_VDD_GPS direction configuration failed:%d\n", rc);
-        pr_err("------------------------cardhu_gps_init end-----------------------\n");
+	}
+	pr_info("------------------------cardhu_gps_init end-----------------------\n");
 }
 
 
@@ -1108,9 +1089,6 @@ static void simdet_init(void)
 #endif
 
 static void acer_board_info(void) {
-	struct board_info board_info;
-	tegra_get_board_info(&board_info);
-	
 	if (acer_board_type == BOARD_PICASSO_M)
 		pr_info("Board Type: Picasso M\n");
 	else if (acer_board_type == BOARD_PICASSO_MF)
@@ -1161,8 +1139,6 @@ static void acer_board_info(void) {
 		pr_info("Wifi module: AH663");
 	else if (acer_wifi_module == BOARD_WIFI_NH660)
 		pr_info("Wifi module: NH660");
-	
-	pr_info("board_info.board_id = %d", board_info.board_id);
 }
 
 extern void tegra_booting_info(void);
@@ -1199,10 +1175,9 @@ static void __init tegra_cardhu_init(void)
 #endif
 	cardhu_setup_bluesleep();
 	//audio_wired_jack_init();
-#if defined(CONFIG_ACER_ES305)
+#ifdef CONFIG_ACER_ES305
 	a1026_init();
 #endif
-	cardhu_pins_state_init();
 	cardhu_emc_init();
 #ifdef CONFIG_ACER_LEDS
 	acer_led_init();
@@ -1220,7 +1195,7 @@ static void __init tegra_cardhu_init(void)
 
 static void __init tegra_cardhu_reserve(void)
 {
-#if defined(CONFIG_NVMAP_CONVERT_CARVEOUT_TO_IOVMM)
+#ifdef CONFIG_NVMAP_CONVERT_CARVEOUT_TO_IOVMM
 	/* support 1920X1200 with 24bpp */
 	tegra_reserve(0, SZ_8M + SZ_1M, SZ_8M + SZ_1M);
 #else

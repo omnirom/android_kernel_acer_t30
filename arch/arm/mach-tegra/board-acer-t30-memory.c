@@ -1240,7 +1240,7 @@ int cardhu_emc_init(void)
 			tegra_init_emc(cardhu_emc_tables_picasso2_samsung_1gb, ARRAY_SIZE(cardhu_emc_tables_picasso2_samsung_1gb));
 			break;
 		default:
-			pr_info("%s: memory not found , using Elpida 1GB memory\n", __func__);
+			pr_info("%s: memory not found, using Elpida 1GB memory\n", __func__);
 			tegra_init_emc(cardhu_emc_tables_picasso2_elpida_1gb, ARRAY_SIZE(cardhu_emc_tables_picasso2_elpida_1gb));
 	}
 
