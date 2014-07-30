@@ -20,6 +20,11 @@
 #include <linux/earlysuspend.h>
 #endif
 
+#include "../../../arch/arm/mach-tegra/board-acer-t30.h"
+#include "../../../arch/arm/mach-tegra/gpio-names.h"
+
+#include <linux/input/mxt1386e_p.h>
+
 #if defined(CONFIG_MACH_PICASSO_M)
 #include <linux/input/mxt1386e_pm.h>
 #elif defined(CONFIG_MACH_PICASSO_MF)
@@ -44,6 +49,8 @@
 #define TP_INT                                TEGRA_GPIO_PJ0
 
 #define ConfigUpdateFlag                      1
+
+extern int acer_board_type;
 
 struct point_data {
 	short Status;
@@ -73,7 +80,7 @@ static bool B = 0;       /* 0: AC PLUG IN    1: AC PLUG OUT   */
 static bool S = 0;       /* H || B */
 static bool S_check = 0; /* Record the status of S */
 
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 static bool bending_enable = 1;
 #endif
 
@@ -222,7 +229,7 @@ struct mxt_data
 	struct input_dev     *input;
 	struct work_struct   init_dwork;
 	struct work_struct   touch_dwork;
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#if defined(CONFIG_ARCH_ACER_T30)
 	struct delayed_work  bending_dwork;
 #endif
 	struct point_data    PointBuf[NUM_FINGERS];
@@ -248,7 +255,7 @@ static int ATMEL_Issleep(struct mxt_data *mxt);
 static int ATMEL_Resume(struct mxt_data *mxt);
 static int ATMEL_IsResume(struct mxt_data *mxt);
 static int ATMEL_Calibrate(struct mxt_data *mxt);
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 static int ATMEL_Bending_On_Off(struct mxt_data *mxt, u8 cfg_switch);
 #endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -534,9 +541,9 @@ static void touch_worker(struct work_struct *work)
 		mxt->PointBuf[ContactID].X = Buf;
 		Buf = buffer[3];
 		Buf = (Buf << 4) | (buffer[4] & 0x0F);
-#if defined(CONFIG_MACH_PICASSO_M)
-		Buf = Buf >> 2;
-#endif
+		if (acer_board_type == BOARD_PICASSO_M) {
+				Buf = Buf >> 2;
+		}
 		mxt->PointBuf[ContactID].Y = Buf;
 
 		if (debug == DEBUG_DETAIL) {
@@ -550,7 +557,7 @@ static void touch_worker(struct work_struct *work)
 		} else if (buffer[1] & 0x80) {
 			mxt->PointBuf[ContactID].Status = buffer[5];
 			mxt_debug(DEBUG_DETAIL, "Finger Touch!!\n");
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 			if (bending_enable) {
 				mxt_debug(DEBUG_ERROR, "mXT1386E: enable lens bending\n");
 				bending_enable = 0;
@@ -609,7 +616,7 @@ next_irq:
 	return;
 }
 
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 static void bending_worker(struct work_struct *work)
 {
 	struct mxt_data *mxt;
@@ -894,7 +901,7 @@ static ssize_t plugged_store(struct kobject *kobj, struct kobj_attribute *attr, 
 	}
 
 	mxt_debug(DEBUG_BASIC, "mXT1386E: S: %d\n", S);
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 	if(S != S_check) {
 		if(S) {
 			mxt_debug(DEBUG_ERROR, "mXT1386E: update DI 2 to 4\n");
@@ -1446,7 +1453,7 @@ static int ATMEL_Calibrate(struct mxt_data *mxt)
 	return 0;
 }
 
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 static int ATMEL_Bending_On_Off(struct mxt_data *mxt, u8 cfg_switch)
 {
 	u8 val[1] = {0};
@@ -1519,7 +1526,7 @@ static int ATMEL_WriteConfig(struct mxt_data *mxt)
 	if (mxt_write_block(mxt->client, T48_OBJAddr, 54, T48OBJ) < 0)
 		return -1;
 
-#if defined(CONFIG_MACH_PICASSO_MF)
+#ifdef CONFIG_MACH_PICASSO_MF
 	if (mxt_write_block(mxt->client, T43_OBJAddr, 11, T43OBJ) < 0)
 		return -1;
 
@@ -1850,7 +1857,7 @@ static int mxt_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	INIT_WORK(&mxt->init_dwork, init_worker);
 	INIT_WORK(&mxt->touch_dwork, touch_worker);
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 	INIT_DELAYED_WORK(&mxt->bending_dwork, bending_worker);
 #endif
 	set_bit(EV_ABS, input->evbit);
@@ -1974,7 +1981,7 @@ void mxt_early_suspend(struct early_suspend *h)
 	system will still go to suspend if i2c error,
 	but it will be blocked if sleep configs are not written to touch successfully
 	*/
-#if defined(CONFIG_MACH_PICASSO_MF) || defined(CONFIG_MACH_PICASSO_M)
+#ifdef CONFIG_ARCH_ACER_T30
 	bending_enable = 1;
 	if (ATMEL_Bending_On_Off(data, 0) < 0)
 		mxt_debug(DEBUG_ERROR, "mXT1386E: Bending Disable failed\n");

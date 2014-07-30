@@ -813,7 +813,7 @@ int tegra_get_commchip_id(void)
 
 __setup("commchip_id=", tegra_commchip_id);
 
-#if defined(CONFIG_ARCH_ACER_T30)
+#ifdef CONFIG_ARCH_ACER_T30
 int acer_board_type;
 int acer_board_id;
 int acer_sku;
@@ -836,6 +836,8 @@ static int __init hw_ver_arg(char *options)
 	 */
 
 	acer_board_type  = (hw_ver & 0xf00) >> 8;
+	
+	pr_info("acer_board_type: %d", acer_board_type);
 
 	/* dirty hack to force Picasso M board */
 #if defined(CONFIG_MACH_PICASSO_M)
@@ -845,6 +847,8 @@ static int __init hw_ver_arg(char *options)
 	sku_type         = (hw_ver & 0x1);
 	acer_wifi_module = (hw_ver & 0x2) >> 1;
 	sku_lte          = (hw_ver & 0x4) >> 2;
+	
+	pr_info("acer_board_type after dirty hack: %d", acer_board_type);
 
 	if (sku_type && sku_lte)
 		acer_sku = BOARD_SKU_LTE;

@@ -159,9 +159,7 @@ static void hsuart_power(int on)
 {
 	if (test_bit(BT_SUSPEND, &flags))
 		return;
-#if defined(CONFIG_MACH_PICASSO_M) || defined(CONFIG_MACH_PICASSO_MF)
-	return;
-#endif
+#ifndef CONFIG_ARCH_ACER_T30
 	if (bsi->uport == NULL)
 		return;
 	if (on) {
@@ -171,6 +169,7 @@ static void hsuart_power(int on)
 		tegra_uart_set_mctrl(bsi->uport, 0);
 		tegra_uart_request_clock_off(bsi->uport);
 	}
+#endif
 }
 
 /**
