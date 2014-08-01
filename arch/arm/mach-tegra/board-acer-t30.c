@@ -93,10 +93,49 @@
 #include "../../../sound/soc/tegra/acer_a1026.h"
 #endif
 
-extern int acer_board_type;
-extern int acer_board_id;
-extern int acer_sku;
-extern int acer_wifi_module;
+int acer_board_type;
+int acer_board_id;
+int acer_sku;
+int acer_wifi_module;
+
+static int __init hw_ver_arg(char *options)
+{
+	int hw_ver = 0;
+	int sku_type = 0;
+	int sku_lte  = 0;
+	acer_board_type = 0;
+	acer_board_id = 0;
+	acer_sku = 0;
+	acer_wifi_module = 0;
+
+	hw_ver = simple_strtoul(options, &options, 16);
+	/*
+	 *   4bits      1byte      4bits     1bit   1bit   1bit  1bit
+	 * | sku # | board type | board id | empty | LTE | wifi | 3G |
+	 */
+
+	acer_board_type  = (hw_ver & 0xf00) >> 8;
+	pr_info("acer_board_type = %d", acer_board_type);
+	acer_board_id    = (hw_ver & 0xf0) >> 4;
+	sku_type         = (hw_ver & 0x1);
+	acer_wifi_module = (hw_ver & 0x2) >> 1;
+	sku_lte          = (hw_ver & 0x4) >> 2;
+	
+	if (sku_type && sku_lte)
+		acer_sku = BOARD_SKU_LTE;
+	else if (sku_type && !sku_lte)
+		acer_sku = BOARD_SKU_3G;
+	else
+		acer_sku = BOARD_SKU_WIFI;
+
+	if (acer_wifi_module == BOARD_WIFI_AH663)
+		acer_wifi_module = BOARD_WIFI_AH663;
+	else
+		acer_wifi_module = BOARD_WIFI_NH660;
+
+	return 0;
+}
+early_param("hw_ver", hw_ver_arg);
 
 void gpio_unused_init(void);
 
@@ -1193,6 +1232,14 @@ static void __init tegra_cardhu_init(void)
 	acer_board_info();
 }
 
+void __init picasso_m_init_early(void) {
+	/* dirty hack to force Picasso M board */
+	acer_board_type  = BOARD_PICASSO_M;
+	pr_info("Forced acer_board_type = BOARD_PICASSO_M");
+	
+	tegra_init_early();
+}
+
 static void __init tegra_cardhu_reserve(void)
 {
 #ifdef CONFIG_NVMAP_CONVERT_CARVEOUT_TO_IOVMM
@@ -1208,7 +1255,7 @@ MACHINE_START(PICASSO_M, "picasso_m")
 	.boot_params    = 0x80000100,
 	.map_io         = tegra_map_common_io,
 	.reserve        = tegra_cardhu_reserve,
-	.init_early	= tegra_init_early,
+	.init_early	= picasso_m_init_early,
 	.init_irq       = tegra_init_irq,
 	.timer          = &tegra_timer,
 	.init_machine   = tegra_cardhu_init,
