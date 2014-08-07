@@ -25,12 +25,6 @@
 
 #include <linux/input/mxt1386e_p.h>
 
-#if defined(CONFIG_MACH_PICASSO_M)
-#include <linux/input/mxt1386e_pm.h>
-#elif defined(CONFIG_MACH_PICASSO_MF)
-#include <linux/input/mxt1386e_pmf.h>
-#endif
-
 #define ATMEL1386E_IOCTL_MAGIC 't'
 #define ATMEL1386E_FirmwareVersion            _IOR(ATMEL1386E_IOCTL_MAGIC, 0x01, int)
 #define ATMEL1386E_CHGPinStatus               _IOR(ATMEL1386E_IOCTL_MAGIC, 0x02, int)
@@ -51,6 +45,9 @@
 #define ConfigUpdateFlag                      1
 
 extern int acer_board_type;
+
+int x_max, y_max;
+int ConfigChecksum, ConfigVersion;
 
 struct point_data {
 	short Status;
@@ -1101,11 +1098,7 @@ static int ATMEL_CheckOBJTableCRC(struct mxt_data *mxt)
 	u8 T24_VAL[19] = {0}, T25_VAL[6] = {0}, T27_VAL[7] = {0}, T38_VAL[64] = {0};
 	u8 T40_VAL[5] = {0}, T42_VAL[10] = {0}, T46_VAL[9] = {0};
 	u8 T47_VAL[10] = {0}, T48_VAL[54] = {0};
-#if defined(CONFIG_MACH_PICASSO_MF)
 	u8 T43_VAL[11] = {0}, T56_VAL[51] = {0}, T35_VAL[12] = {0}, T65_VAL[17] = {0};
-#else
-	u8 T43_VAL[7] = {0}, T56_VAL[43] = {0};
-#endif
 
 	u8 i, z, Value;
 	u32 Cal_crc = 0, InternalCRC;
@@ -1364,38 +1357,38 @@ static int ATMEL_CheckOBJTableCRC(struct mxt_data *mxt)
 		for(i=0;i<54;i++)
 			mxt_debug(DEBUG_DETAIL, " T48[%d] 0x%x\n", i, T48_VAL[i]);
 
-#if defined(CONFIG_MACH_PICASSO_MF)
-		if (mxt_read_block(mxt->client, T43_OBJAddr, 11, T43_VAL) < 0)
-			mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
-		for(i=0;i<11;i++)
-			mxt_debug(DEBUG_DETAIL, " T43[%d] 0x%x\n", i, T43_VAL[i]);
+		if (acer_board_type == BOARD_PICASSO_MF) {
+				if (mxt_read_block(mxt->client, T43_OBJAddr, 11, T43_VAL) < 0)
+					mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
+				for(i=0;i<11;i++)
+					mxt_debug(DEBUG_DETAIL, " T43[%d] 0x%x\n", i, T43_VAL[i]);
 
-		if (mxt_read_block(mxt->client, T56_OBJAddr, 51, T56_VAL) < 0)
-			mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
-		for(i=0;i<51;i++)
-			mxt_debug(DEBUG_DETAIL, " T56[%d] 0x%x\n", i, T56_VAL[i]);
+				if (mxt_read_block(mxt->client, T56_OBJAddr, 51, T56_VAL) < 0)
+					mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
+				for(i=0;i<51;i++)
+					mxt_debug(DEBUG_DETAIL, " T56[%d] 0x%x\n", i, T56_VAL[i]);
 
-		if (mxt_read_block(mxt->client, T35_OBJAddr, 12, T35_VAL) < 0)
-			mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
-		for(i=0;i<12;i++)
-			mxt_debug(DEBUG_DETAIL, " T35[%d] 0x%x\n", i, T35_VAL[i]);
+				if (mxt_read_block(mxt->client, T35_OBJAddr, 12, T35_VAL) < 0)
+					mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
+				for(i=0;i<12;i++)
+					mxt_debug(DEBUG_DETAIL, " T35[%d] 0x%x\n", i, T35_VAL[i]);
 
-		if (mxt_read_block(mxt->client, T65_OBJAddr, 17, T65_VAL) < 0)
-			mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
-		for(i=0;i<17;i++)
-			mxt_debug(DEBUG_DETAIL, " T65[%d] 0x%x\n", i, T65_VAL[i]);
+				if (mxt_read_block(mxt->client, T65_OBJAddr, 17, T65_VAL) < 0)
+					mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
+				for(i=0;i<17;i++)
+					mxt_debug(DEBUG_DETAIL, " T65[%d] 0x%x\n", i, T65_VAL[i]);
 
-#else
-		if (mxt_read_block(mxt->client, T43_OBJAddr, 7, T43_VAL) < 0)
-			mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
-		for(i=0;i<7;i++)
-			mxt_debug(DEBUG_DETAIL, " T43[%d] 0x%x\n", i, T43_VAL[i]);
+		} else {
+				if (mxt_read_block(mxt->client, T43_OBJAddr, 7, T43_VAL) < 0)
+					mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
+				for(i=0;i<7;i++)
+					mxt_debug(DEBUG_DETAIL, " T43[%d] 0x%x\n", i, T43_VAL[i]);
 
-		if (mxt_read_block(mxt->client, T56_OBJAddr, 43, T56_VAL) < 0)
-			mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
-		for(i=0;i<43;i++)
-			mxt_debug(DEBUG_DETAIL, " T56[%d] 0x%x\n", i, T56_VAL[i]);
-#endif
+				if (mxt_read_block(mxt->client, T56_OBJAddr, 43, T56_VAL) < 0)
+					mxt_debug(DEBUG_ERROR, "mXT1386E: mxt_read_block failed\n");
+				for(i=0;i<43;i++)
+					mxt_debug(DEBUG_DETAIL, " T56[%d] 0x%x\n", i, T56_VAL[i]);
+		}
 	}
 	kfree(buffer);
 
@@ -1526,25 +1519,25 @@ static int ATMEL_WriteConfig(struct mxt_data *mxt)
 	if (mxt_write_block(mxt->client, T48_OBJAddr, 54, T48OBJ) < 0)
 		return -1;
 
-#ifdef CONFIG_MACH_PICASSO_MF
-	if (mxt_write_block(mxt->client, T43_OBJAddr, 11, T43OBJ) < 0)
-		return -1;
+	if (acer_board_type == BOARD_PICASSO_MF) {
+		if (mxt_write_block(mxt->client, T43_OBJAddr, 11, T43OBJ) < 0)
+			return -1;
 
-	if (mxt_write_block(mxt->client, T56_OBJAddr, 51, T56OBJ) < 0)
-		return -1;
+		if (mxt_write_block(mxt->client, T56_OBJAddr, 51, T56OBJ) < 0)
+			return -1;
 
-	if (mxt_write_block(mxt->client, T35_OBJAddr, 12, T35OBJ) < 0)
-		return -1;
+		if (mxt_write_block(mxt->client, T35_OBJAddr, 12, T35OBJ) < 0)
+			return -1;
 
-	if (mxt_write_block(mxt->client, T65_OBJAddr, 17, T65OBJ) < 0)
-		return -1;
-#else
-	if (mxt_write_block(mxt->client, T43_OBJAddr, 7, T43OBJ) < 0)
-		return -1;
+		if (mxt_write_block(mxt->client, T65_OBJAddr, 17, T65OBJ) < 0)
+			return -1;
+	} else {
+		if (mxt_write_block(mxt->client, T43_OBJAddr, 7, T43OBJ) < 0)
+			return -1;
 
-	if (mxt_write_block(mxt->client, T56_OBJAddr, 43, T56OBJ) < 0)
-		return -1;
-#endif
+		if (mxt_write_block(mxt->client, T56_OBJAddr, 43, T56OBJ) < 0)
+			return -1;
+	}
 
 	return 0;
 }
@@ -1818,6 +1811,47 @@ static int mxt_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	mxt_debug(DEBUG_DETAIL, "mXT1386E: mxt_probe\n");
 
+	if (acer_board_type == BOARD_PICASSO_M) {
+		x_max = X_MAX_PM;
+		y_max = Y_MAX_PM;
+		ConfigChecksum = ConfigChecksum_PM;
+		ConfigVersion = ConfigVersion_PM;
+	} else if (acer_board_type == BOARD_PICASSO_MF) {
+		x_max = X_MAX_PMF;
+		y_max = Y_MAX_PMF;
+		ConfigChecksum = ConfigChecksum_PMF;
+		ConfigVersion = ConfigVersion_PMF;
+
+		// by default, these are initialized for PICASSO_M
+		T38OBJ[1] = 1;
+
+		T08OBJ[7] = 17;
+		T08OBJ[9] = 0;
+
+		T09OBJ[12] = 8;
+		T09OBJ[13] = 0;
+		T09OBJ[18] = 175;
+		T09OBJ[19] = 4;
+		T09OBJ[20] = 127;
+		T09OBJ[21] = 7;
+
+		T25OBJ[2] = 0;
+		T25OBJ[3] = 0;
+		T25OBJ[4] = 0;
+
+		T42OBJ[1] = 40;
+		T42OBJ[2] = 80;
+		T42OBJ[3] = 80;
+
+		T46OBJ_0[0] = 64;
+		T46OBJ_0[2] = 16;
+		T46OBJ_0[3] = 32;
+
+		T48OBJ[11] = 55;
+
+		T56OBJ[39] = 0;
+	}
+
 	if (client == NULL) {
 		mxt_debug(DEBUG_ERROR, "mXT1386E: client == NULL\n");
 		return	-EINVAL;
@@ -1869,12 +1903,12 @@ static int mxt_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	set_bit(ABS_Y, input->keybit);
 
 	/* single touch */
-	input_set_abs_params(input, ABS_X, X_MIN, X_MAX, 0, 0);
-	input_set_abs_params(input, ABS_Y, Y_MIN, Y_MAX, 0, 0);
+	input_set_abs_params(input, ABS_X, X_MIN, x_max, 0, 0);
+	input_set_abs_params(input, ABS_Y, Y_MIN, y_max, 0, 0);
 
 	/* multiple touch */
-	input_set_abs_params(input, ABS_MT_POSITION_X, X_MIN, X_MAX, 0, 0);
-	input_set_abs_params(input, ABS_MT_POSITION_Y, Y_MIN, Y_MAX, 0, 0);
+	input_set_abs_params(input, ABS_MT_POSITION_X, X_MIN, x_max, 0, 0);
+	input_set_abs_params(input, ABS_MT_POSITION_Y, Y_MIN, y_max, 0, 0);
 	input_set_abs_params(input, ABS_MT_TOUCH_MAJOR, 0, MXT_MAX_TOUCH_SIZE, 0, 0);
 	input_set_abs_params(input, ABS_MT_TRACKING_ID, 0, NUM_FINGERS,0, 0);
 	input_set_abs_params(input, ABS_MT_PRESSURE, 0, MXT_MAX_TOUCH_SIZE, 0, 0);
